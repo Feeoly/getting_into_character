@@ -60,3 +60,8 @@
 - **Notes for next session**:
   - Phase 1 把“权限/状态可见性 + 本地存储/事件模型 + 隐私文案可见”当成验收门槛
 
+### Session
+
+- **Stopped at**: Phase 1 context gathered
+- **Resume file**: `.planning/phases/01-trust-baseline/01-CONTEXT.md`
+
