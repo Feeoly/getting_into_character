@@ -1,3 +1,17 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
+last_updated: "2026-04-10T14:00:12.158Z"
+progress:
+  total_phases: 5
+  completed_phases: 0
+  total_plans: 2
+  completed_plans: 0
+  percent: 0
+---
+
 ## Project Reference
 
 - **Name**: Getting Into Character（面试角色排练）
@@ -8,6 +22,9 @@
   - 支持离线视频背景 + 用户上传
 
 ## Current Position
+
+Phase: 01 (信任基线与会话骨架) — EXECUTING
+Plan: 1 of 2
 
 - **Current phase**: 0 (Roadmap created, not started)
 - **Current plan**: -
@@ -64,4 +81,3 @@
 
 - **Stopped at**: Phase 1 UI-SPEC approved
 - **Resume file**: `.planning/phases/01-trust-baseline/01-UI-SPEC.md`
-
