@@ -11,16 +11,16 @@ import { SessionMeta } from "../../_ui/SessionMeta";
 export default function SessionDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
   const [session, setSession] = useState<Session | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    const { id } = params;
 
     (async () => {
-      const { id } = await params;
       const s = await getSessionById(id);
       if (cancelled) return;
       if (!s) {

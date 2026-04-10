@@ -1,8 +1,9 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 type Props = {
   href: string;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export function PrimaryButton({ href, children }: Props) {

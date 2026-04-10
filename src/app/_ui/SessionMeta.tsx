@@ -12,6 +12,9 @@ function formatDate(ms: number) {
 }
 
 export function SessionMeta({ session }: { session: Session }) {
+  const duration =
+    session.durationSec === undefined ? "—" : `${session.durationSec}s`;
+
   return (
     <div className="rounded-lg border border-slate-200 bg-white px-6 py-5">
       <div className="flex items-start justify-between gap-4">
@@ -24,7 +27,7 @@ export function SessionMeta({ session }: { session: Session }) {
             <div className="mt-2 text-sm text-slate-500">备注：—</div>
           )}
           <div className="mt-2 text-sm text-slate-500">
-            时长：{session.durationSec ? `${session.durationSec}s` : "—"}
+            时长：{duration}
           </div>
         </div>
 

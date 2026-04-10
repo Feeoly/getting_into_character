@@ -24,6 +24,8 @@ export default function NewSessionPage() {
         return;
       }
       router.push(`/session/${res.value.id}`);
+    } catch {
+      setError("操作失败。请刷新后重试；若仍失败，请检查浏览器存储权限或剩余空间。");
     } finally {
       setIsSubmitting(false);
     }
