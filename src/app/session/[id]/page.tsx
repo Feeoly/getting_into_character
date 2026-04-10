@@ -54,6 +54,19 @@ export default function SessionDetailPage({
             <>
               <SessionMeta session={session} />
               <SessionActions session={session} onUpdated={setSession} />
+              <div className="rounded-lg border border-slate-200 bg-white px-6 py-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-900">排练页</div>
+                    <div className="mt-1 text-sm text-slate-600">
+                      场景背景、录制与停顿提示都在这里进行。
+                    </div>
+                  </div>
+                  <PrimaryButton href={`/session/${session.id}/rehearsal`}>
+                    进入排练
+                  </PrimaryButton>
+                </div>
+              </div>
             </>
           ) : (
             <div className="text-sm text-slate-600">加载中…</div>
