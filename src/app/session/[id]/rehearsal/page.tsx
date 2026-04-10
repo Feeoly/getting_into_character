@@ -17,6 +17,9 @@ import type { StopRecordingResult } from "./_lib/recording";
 import { SettingsDrawer } from "./_ui/SettingsDrawer";
 import { PreviewDraggable } from "./_ui/PreviewDraggable";
 import { RecorderPanel } from "./_ui/RecorderPanel";
+import { PauseToast } from "./_ui/PauseToast";
+import { createPauseDetector } from "./_lib/pauseDetector";
+import { addPauseEvent } from "./_lib/rehearsalRepo";
 
 function bgImageSrc(presetId: string | undefined): string {
   if (presetId === "bg-2") return "/rehearsal/backgrounds/bg-2.jpg";
@@ -34,6 +37,12 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
 
   const [liveStream, setLiveStream] = useState<MediaStream | null>(null);
   const [playback, setPlayback] = useState<StopRecordingResult | null>(null);
+  const [recordingEpochStartMs, setRecordingEpochStartMs] = useState<number | null>(null);
+
+  const [toastText, setToastText] = useState<string | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
+  const currentPausePromptShownRef = useRef(false);
+  const currentPauseStartEpochRef = useRef<number | null>(null);
 
   const [uploadedBgUrl, setUploadedBgUrl] = useState<string | null>(null);
   const uploadedBgUrlRef = useRef<string | null>(null);
@@ -84,8 +93,64 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
     return () => {
       if (uploadedBgUrlRef.current) URL.revokeObjectURL(uploadedBgUrlRef.current);
       uploadedBgUrlRef.current = null;
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!settings) return;
+    if (!liveStream) return;
+    if (recordingEpochStartMs === null) return;
+
+    const detector = createPauseDetector({
+      stream: liveStream,
+      thresholdMs: settings.pauseThresholdMs,
+      energyFloor: 0.02,
+      smoothingMs: 400,
+      cooldownMs: 2000,
+      onPauseStart: (pauseStartEpochMs) => {
+        currentPauseStartEpochRef.current = pauseStartEpochMs;
+        const promptShown = Boolean(settings.pausePromptEnabled);
+        currentPausePromptShownRef.current = promptShown;
+
+        if (!promptShown) return;
+        setToastText("保持角色继续表达");
+        if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = window.setTimeout(() => setToastText(null), 2000);
+      },
+      onPauseEnd: async (pauseEndEpochMs) => {
+        const pauseStartEpochMs = currentPauseStartEpochRef.current;
+        if (!pauseStartEpochMs) return;
+        const start_ms = Math.max(0, pauseStartEpochMs - recordingEpochStartMs);
+        const duration_ms = Math.max(0, pauseEndEpochMs - pauseStartEpochMs);
+
+        try {
+          await addPauseEvent({
+            sessionId: id,
+            start_ms,
+            duration_ms,
+            threshold_ms: settings.pauseThresholdMs,
+            prompt_shown: currentPausePromptShownRef.current,
+            session_status: session?.status ?? "not_started",
+          });
+        } catch {
+          // 忽略写入失败（不影响录制）
+        } finally {
+          currentPauseStartEpochRef.current = null;
+        }
+      },
+    });
+
+    return () => detector.stop();
+  }, [
+    id,
+    liveStream,
+    recordingEpochStartMs,
+    settings?.pauseThresholdMs,
+    settings?.pausePromptEnabled,
+    session?.status,
+    settings,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -221,6 +286,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
                   settings={settings}
                   onLiveStreamChange={setLiveStream}
                   onPlaybackChange={setPlayback}
+                  onRecordingEpochStart={setRecordingEpochStartMs}
                 />
               </div>
             ) : (
@@ -251,6 +317,8 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
         liveStream={liveStream}
         playbackUrl={playback?.kind === "video" ? playback.url : null}
       />
+
+      <PauseToast text={toastText} />
     </main>
   );
 }

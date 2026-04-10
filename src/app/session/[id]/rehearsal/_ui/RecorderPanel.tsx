@@ -17,6 +17,7 @@ type Props = {
   settings: RehearsalSettings;
   onLiveStreamChange: (stream: MediaStream | null) => void;
   onPlaybackChange: (playback: StopRecordingResult | null) => void;
+  onRecordingEpochStart: (epochMs: number | null) => void;
 };
 
 function formatSec(sec: number): string {
@@ -30,7 +31,12 @@ function toMessage(e: unknown): string {
   return err?.message ?? "操作失败。请刷新后重试。";
 }
 
-export function RecorderPanel({ settings, onLiveStreamChange, onPlaybackChange }: Props) {
+export function RecorderPanel({
+  settings,
+  onLiveStreamChange,
+  onPlaybackChange,
+  onRecordingEpochStart,
+}: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [kind, setKind] = useState<RecordingKind>("audio");
@@ -63,11 +69,14 @@ export function RecorderPanel({ settings, onLiveStreamChange, onPlaybackChange }
       setKind(res.kind);
       setMimeType(res.mimeType ?? null);
       onLiveStreamChange(res.stream);
-      startedAtRef.current = Date.now();
+      const now = Date.now();
+      startedAtRef.current = now;
+      onRecordingEpochStart(now);
       setElapsedSec(0);
       setStatus("recording");
     } catch (e) {
       onLiveStreamChange(null);
+      onRecordingEpochStart(null);
       setStatus("error");
       setError(toMessage(e));
     }
@@ -79,11 +88,13 @@ export function RecorderPanel({ settings, onLiveStreamChange, onPlaybackChange }
     try {
       const res = await stopRecording();
       onLiveStreamChange(null);
+      onRecordingEpochStart(null);
       setPlayback(res);
       onPlaybackChange(res);
       setStatus("stopped");
     } catch (e) {
       onLiveStreamChange(null);
+      onRecordingEpochStart(null);
       setStatus("error");
       setError(toMessage(e));
     }
