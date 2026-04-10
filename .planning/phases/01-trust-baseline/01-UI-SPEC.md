@@ -1,7 +1,7 @@
 ---
 phase: 01
 slug: 01-trust-baseline
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-10
@@ -22,6 +22,14 @@ created: 2026-04-10
 | Component library | radix *(when shadcn is introduced)* |
 | Icon library | lucide-react *(default when shadcn is introduced)* |
 | Font | system-ui (fallback stack). Preferred: Inter (later) |
+
+---
+
+## Visual Hierarchy (Phase 1)
+
+**First-screen focal point:** “开始排练”主 CTA。  
+**Hierarchy order:** 标题/一句话价值说明 → 主 CTA → 历史列表（若有）→ 辅助链接。  
+**Privacy trust placement:** 按 `01-CONTEXT.md` 决策，隐私说明为**内联**，紧贴主 CTA 下方（次要文字样式），不抢主 CTA 视觉权重。
 
 ---
 
@@ -89,11 +97,11 @@ Accent reserved for: Primary CTA button; active nav/tab/list selection; keyboard
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: FLAG (non-blocking)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved (2026-04-10)
