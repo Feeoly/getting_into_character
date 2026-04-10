@@ -37,8 +37,8 @@
 
 ### Pause（停顿提醒与记录）
 
-- [ ] **PAUS-01**: 系统能检测长时间停顿并在屏幕上温和提示“保持角色继续表达”
-- [ ] **PAUS-02**: 每次停顿事件会被记录（包含开始时间、持续时长、阈值）
+- [x] **PAUS-01**: 系统能检测长时间停顿并在屏幕上温和提示“保持角色继续表达”
+- [x] **PAUS-02**: 每次停顿事件会被记录（包含开始时间、持续时长、阈值）
 - [x] **PAUS-03**: 用户可在设置中配置停顿阈值（默认 5 秒），并可关闭提示
 
 ### Review（复盘与建议）
@@ -99,8 +99,8 @@
 | STT-01 | Phase 3 | Pending |
 | STT-02 | Phase 3 | Pending |
 | STT-03 | Phase 3 | Pending |
-| PAUS-01 | Phase 2 | Pending |
-| PAUS-02 | Phase 2 | Pending |
+| PAUS-01 | Phase 2 | Complete |
+| PAUS-02 | Phase 2 | Complete |
 | PAUS-03 | Phase 2 | Complete |
 | REVI-01 | Phase 4 | Pending |
 | REVI-02 | Phase 4 | Pending |
