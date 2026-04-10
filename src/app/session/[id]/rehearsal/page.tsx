@@ -13,7 +13,10 @@ import {
   saveUploadedBackground,
 } from "./_lib/rehearsalRepo";
 import type { RehearsalSettings } from "./_lib/rehearsalTypes";
+import type { StopRecordingResult } from "./_lib/recording";
 import { SettingsDrawer } from "./_ui/SettingsDrawer";
+import { PreviewDraggable } from "./_ui/PreviewDraggable";
+import { RecorderPanel } from "./_ui/RecorderPanel";
 
 function bgImageSrc(presetId: string | undefined): string {
   if (presetId === "bg-2") return "/rehearsal/backgrounds/bg-2.jpg";
@@ -28,6 +31,9 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
   const [settings, setSettings] = useState<RehearsalSettings | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [liveStream, setLiveStream] = useState<MediaStream | null>(null);
+  const [playback, setPlayback] = useState<StopRecordingResult | null>(null);
 
   const [uploadedBgUrl, setUploadedBgUrl] = useState<string | null>(null);
   const uploadedBgUrlRef = useRef<string | null>(null);
@@ -199,15 +205,23 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
                 </div>
               </div>
             ) : session && settings ? (
-              <div className="rounded-lg border border-white/30 bg-white/90 px-6 py-5 backdrop-blur">
-                <div className="text-sm font-semibold text-slate-900">
-                  {session.name ? `会话：${session.name}` : "会话已加载"}
-                </div>
-                <div className="mt-2 text-sm text-slate-600">
-                  本计划先搭好背景与设置，录制与停顿提示将在后续任务上线。
+              <div className="space-y-4">
+                <div className="rounded-lg border border-white/30 bg-white/90 px-6 py-5 backdrop-blur">
+                  <div className="text-sm font-semibold text-slate-900">
+                    {session.name ? `会话：${session.name}` : "会话已加载"}
+                  </div>
+                  <div className="mt-2 text-sm text-slate-600">
+                    你可以先调好背景与设置，再开始录制。
+                  </div>
+
+                  {error ? <div className="mt-3 text-sm text-red-600">{error}</div> : null}
                 </div>
 
-                {error ? <div className="mt-3 text-sm text-red-600">{error}</div> : null}
+                <RecorderPanel
+                  settings={settings}
+                  onLiveStreamChange={setLiveStream}
+                  onPlaybackChange={setPlayback}
+                />
               </div>
             ) : (
               <div className="text-sm text-white/80">加载中…</div>
@@ -231,6 +245,12 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
           error={error}
         />
       ) : null}
+
+      <PreviewDraggable
+        mode={playback ? "playback" : "live"}
+        liveStream={liveStream}
+        playbackUrl={playback?.kind === "video" ? playback.url : null}
+      />
     </main>
   );
 }
