@@ -221,17 +221,15 @@ Step 2.6: SKIPPED（本 Phase 研究层面不依赖外部服务；仅需 Node/np
 | A2 | “重录”推荐实现为“创建新 session（新 attempt）” | Architecture Patterns / Pitfalls | 若产品希望覆盖同一条记录，需要不同字段与 UI 交互 |
 | A3 | 需要把“断网可用/无外链请求”作为信任验收项 | Common Pitfalls / Security Domain | 若不要求可验证，会更容易引入第三方依赖并削弱信任 |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **“重录”在产品上到底意味着什么？**
    - What we know: 需求写了“开始/结束/重录”。[VERIFIED: REQUIREMENTS.md]
-   - What's unclear: 是覆盖同一条，还是生成新的 attempt。
-   - Recommendation: 规划阶段固定语义；若不确定，优先新建 attempt（保留历史）。
+   - Resolution: **重录 = 创建新会话（新 attempt）**，不覆盖旧记录；保持可追溯性与信任（已写入 `01-02-PLAN.md` Task 1 acceptance_criteria）。
 
 2. **Phase 1 是否需要“会话详情页”的最小骨架？**
    - What we know: ENTR-03 要“再次打开复盘”。[VERIFIED: REQUIREMENTS.md]
-   - What's unclear: 复盘页壳是同一路由还是单独页面。
-   - Recommendation: 先做 `/session/[id]` 的只读壳（展示场景/状态/时间 + 隐私说明），后续 Phase 填充录制/转写/事件。
+   - Resolution: **需要 `/session/[id]` 详情/复盘壳**，用于“再次打开”与状态动作承载（已写入 `01-02-PLAN.md` files_modified 与 Task 3 acceptance_criteria）。
 
 ## Sources
 
