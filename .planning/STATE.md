@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Ready to plan
-last_updated: "2026-04-10T14:33:33.275Z"
+status: Ready to execute
+last_updated: "2026-04-10T14:41:00.000Z"
 progress:
   total_phases: 5
   completed_phases: 1
-  total_plans: 2
+  total_plans: 5
   completed_plans: 2
-  percent: 100
+  percent: 40
 ---
 
 ## Project Reference
@@ -24,19 +24,19 @@ progress:
 ## Current Position
 
 Phase: 2
-Plan: Not started
+Plan: Planned
 
-- **Current phase**: 0 (Roadmap created, not started)
-- **Current plan**: -
-- **Status**: Not started
-- **Progress**: \[--------------------] 0%
+- **Current phase**: 2 (Phase 2 planned, ready to execute)
+- **Current plan**: 02-01 → 02-02 → 02-03
+- **Status**: Ready to execute
+- **Progress**: \[========------------] 40%
 
 ## Phase Tracking
 
 | Phase | Name | Status | Notes |
 |------:|------|--------|-------|
-| 1 | 信任基线与会话骨架 | Not started | 本地优先数据流 + 权限/状态可见性 + 会话创建/历史 |
-| 2 | 排练页录制与停顿事件 MVP | Not started | 背景 + 录制回放 + 停顿提醒/记录 + 设置 |
+| 1 | 信任基线与会话骨架 | Completed | 本地优先数据流 + 权限/状态可见性 + 会话创建/历史 |
+| 2 | 排练页录制与停顿事件 MVP | Planned | 背景 + 录制回放 + 停顿提醒/记录 + 设置 |
 | 3 | 本地转写管线（可插拔引擎） | Not started | 转写文本 + 时间信息 + 默认不上传 |
 | 4 | 复盘闭环 + 导出/删除 | Not started | 复盘页跳转锚点 + AI 建议 + 导出/清理 |
 | 5 | 角色卡差异化 + 证据锚定建议 | Not started | 角色卡生成 + 朗读模式 |
@@ -73,11 +73,11 @@ Plan: Not started
 
 ## Session Continuity
 
-- **Next command**: `/gsd-plan-phase 2`
+- **Next command**: `/gsd-execute-phase 2`
 - **Notes for next session**:
   - Phase 2 重点：录制稳定（至少音频）+ 温和停顿提示/事件记录 + 背景素材（图片为主 + 预置1个小视频）+ 设置抽屉
 
 ### Session
 
-- **Stopped at**: Phase 1 UI-SPEC approved
-- **Resume file**: `.planning/phases/01-trust-baseline/01-UI-SPEC.md`
+- **Stopped at**: Phase 2 planned
+- **Resume file**: `.planning/phases/02-mvp/02-01-PLAN.md`
