@@ -2,12 +2,14 @@ import { db } from "../../../../_lib/db";
 import {
   BACKGROUND_SOURCE_SCHEMA,
   makeDefaultRehearsalSettings,
+  PAUSE_EVENT_SCHEMA,
   PAUSE_THRESHOLD_DEFAULT_MS,
   PAUSE_THRESHOLD_MAX_MS,
   PAUSE_THRESHOLD_MIN_MS,
   REHEARSAL_SETTINGS_SCHEMA,
   UPLOADED_BACKGROUND_MAX_BYTES,
   UPLOADED_BACKGROUND_SCHEMA,
+  type PauseEvent,
   type RehearsalSettings,
   type UploadedBackground,
 } from "./rehearsalTypes";
@@ -116,5 +118,34 @@ export async function getUploadedBackground(id: string): Promise<UploadedBackgro
   } catch {
     return null;
   }
+}
+
+export async function addPauseEvent(event: Omit<PauseEvent, "id" | "createdAt">): Promise<void> {
+  const createdAt = Date.now();
+  const id = `${event.sessionId}:${Math.max(0, Math.round(event.start_ms))}`;
+
+  const row: PauseEvent = {
+    ...event,
+    id,
+    start_ms: Math.max(0, Math.round(event.start_ms)),
+    duration_ms: Math.max(0, Math.round(event.duration_ms)),
+    threshold_ms: Math.max(0, Math.round(event.threshold_ms)),
+    createdAt,
+  };
+
+  const parsed = PAUSE_EVENT_SCHEMA.safeParse(row);
+  if (!parsed.success) return;
+
+  await db.pauseEvents.put(parsed.data);
+}
+
+export async function listPauseEvents(sessionId: string): Promise<PauseEvent[]> {
+  const rows = await db.pauseEvents.where("sessionId").equals(sessionId).sortBy("start_ms");
+  const events: PauseEvent[] = [];
+  for (const row of rows) {
+    const parsed = PAUSE_EVENT_SCHEMA.safeParse(row);
+    if (parsed.success) events.push(parsed.data);
+  }
+  return events;
 }
 

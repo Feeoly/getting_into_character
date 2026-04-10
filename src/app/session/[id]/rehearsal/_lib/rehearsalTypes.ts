@@ -57,3 +57,18 @@ export type UploadedBackground = z.infer<typeof UPLOADED_BACKGROUND_SCHEMA>;
 
 export type UploadedBackgroundRow = UploadedBackground;
 
+export const PAUSE_EVENT_SCHEMA = z.object({
+  id: z.string().min(1),
+  sessionId: z.string().min(1),
+  start_ms: z.number().int().nonnegative(),
+  duration_ms: z.number().int().nonnegative(),
+  threshold_ms: z.number().int().nonnegative(),
+  prompt_shown: z.boolean(),
+  session_status: z.enum(["not_started", "in_progress", "ended"]),
+  createdAt: z.number().int().nonnegative(),
+});
+
+export type PauseEvent = z.infer<typeof PAUSE_EVENT_SCHEMA>;
+
+export type PauseEventRow = PauseEvent;
+
