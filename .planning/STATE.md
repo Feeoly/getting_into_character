@@ -73,9 +73,9 @@ Plan: Not started
 
 ## Session Continuity
 
-- **Next command**: `/gsd-plan-phase 1`
+- **Next command**: `/gsd-plan-phase 2`
 - **Notes for next session**:
-  - Phase 1 把“权限/状态可见性 + 本地存储/事件模型 + 隐私文案可见”当成验收门槛
+  - Phase 2 重点：录制稳定（至少音频）+ 温和停顿提示/事件记录 + 背景素材（图片为主 + 预置1个小视频）+ 设置抽屉
 
 ### Session
 
