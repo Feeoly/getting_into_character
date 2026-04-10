@@ -19,3 +19,17 @@ export const SESSION_SCHEMA = z.object({
 
 export type Session = z.infer<typeof SESSION_SCHEMA>;
 
+export type SessionRepoErrorCode =
+  | "storage_error"
+  | "invalid_transition"
+  | "not_found";
+
+export type SessionRepoError = {
+  code: SessionRepoErrorCode;
+  message: string;
+};
+
+export type RepoResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; error: SessionRepoError };
+
