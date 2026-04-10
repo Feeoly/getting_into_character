@@ -14,6 +14,9 @@ function formatDate(ms: number) {
 }
 
 export function SessionRow({ session }: { session: Session }) {
+  const duration =
+    session.durationSec === undefined ? "—" : `${session.durationSec}s`;
+
   return (
     <Link
       href={`/session/${session.id}`}
@@ -31,7 +34,7 @@ export function SessionRow({ session }: { session: Session }) {
 
       <div className="flex items-center gap-3">
         <div className="hidden text-xs text-slate-500 sm:block">
-          时长：{session.durationSec ? `${session.durationSec}s` : "—"}
+          时长：{duration}
         </div>
         <StatusBadge status={session.status} />
       </div>
