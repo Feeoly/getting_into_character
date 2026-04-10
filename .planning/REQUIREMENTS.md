@@ -24,10 +24,10 @@
 
 ### Recording（录制）
 
-- [ ] **RECD-01**: 用户可授权并录制麦克风音频（至少音频录制稳定可用）
-- [ ] **RECD-02**: 用户可启用摄像头画面录制（可选项，权限按需请求）
-- [ ] **RECD-03**: 排练页存在一个可移动的“录制画面/预览区域”（拖拽位置可用）
-- [ ] **RECD-04**: 用户可回放本次录制内容（至少音频可回放；若有视频则同步回放）
+- [x] **RECD-01**: 用户可授权并录制麦克风音频（至少音频录制稳定可用）
+- [x] **RECD-02**: 用户可启用摄像头画面录制（可选项，权限按需请求）
+- [x] **RECD-03**: 排练页存在一个可移动的“录制画面/预览区域”（拖拽位置可用）
+- [x] **RECD-04**: 用户可回放本次录制内容（至少音频可回放；若有视频则同步回放）
 
 ### STT（语音转写）
 
@@ -92,10 +92,10 @@
 | ROLE-03 | Phase 5 | Pending |
 | SCEN-01 | Phase 2 | Complete |
 | SCEN-02 | Phase 2 | Complete |
-| RECD-01 | Phase 2 | Pending |
-| RECD-02 | Phase 2 | Pending |
-| RECD-03 | Phase 2 | Pending |
-| RECD-04 | Phase 2 | Pending |
+| RECD-01 | Phase 2 | Complete |
+| RECD-02 | Phase 2 | Complete |
+| RECD-03 | Phase 2 | Complete |
+| RECD-04 | Phase 2 | Complete |
 | STT-01 | Phase 3 | Pending |
 | STT-02 | Phase 3 | Pending |
 | STT-03 | Phase 3 | Pending |
