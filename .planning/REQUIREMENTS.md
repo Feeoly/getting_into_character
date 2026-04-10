@@ -19,8 +19,8 @@
 
 ### Scene（场景背景）
 
-- [ ] **SCEN-01**: 排练页展示面试场景背景（支持使用离线生成的视频背景）
-- [ ] **SCEN-02**: 用户可上传自己的背景素材并在排练页使用
+- [x] **SCEN-01**: 排练页展示面试场景背景（支持使用离线生成的视频背景）
+- [x] **SCEN-02**: 用户可上传自己的背景素材并在排练页使用
 
 ### Recording（录制）
 
@@ -39,7 +39,7 @@
 
 - [ ] **PAUS-01**: 系统能检测长时间停顿并在屏幕上温和提示“保持角色继续表达”
 - [ ] **PAUS-02**: 每次停顿事件会被记录（包含开始时间、持续时长、阈值）
-- [ ] **PAUS-03**: 用户可在设置中配置停顿阈值（默认 5 秒），并可关闭提示
+- [x] **PAUS-03**: 用户可在设置中配置停顿阈值（默认 5 秒），并可关闭提示
 
 ### Review（复盘与建议）
 
@@ -55,7 +55,7 @@
 
 ### Settings（设置）
 
-- [ ] **SETT-01**: 设置页提供停顿阈值、提示开关、背景来源（离线/上传）等基础配置
+- [x] **SETT-01**: 设置页提供停顿阈值、提示开关、背景来源（离线/上传）等基础配置
 
 ## v2 Requirements
 
@@ -90,8 +90,8 @@
 | ROLE-01 | Phase 5 | Pending |
 | ROLE-02 | Phase 5 | Pending |
 | ROLE-03 | Phase 5 | Pending |
-| SCEN-01 | Phase 2 | Pending |
-| SCEN-02 | Phase 2 | Pending |
+| SCEN-01 | Phase 2 | Complete |
+| SCEN-02 | Phase 2 | Complete |
 | RECD-01 | Phase 2 | Pending |
 | RECD-02 | Phase 2 | Pending |
 | RECD-03 | Phase 2 | Pending |
@@ -101,14 +101,14 @@
 | STT-03 | Phase 3 | Pending |
 | PAUS-01 | Phase 2 | Pending |
 | PAUS-02 | Phase 2 | Pending |
-| PAUS-03 | Phase 2 | Pending |
+| PAUS-03 | Phase 2 | Complete |
 | REVI-01 | Phase 4 | Pending |
 | REVI-02 | Phase 4 | Pending |
 | REVI-03 | Phase 4 | Pending |
 | PRIV-01 | Phase 4 | Pending |
 | PRIV-02 | Phase 1 | Pending |
 | PRIV-03 | Phase 4 | Pending |
-| SETT-01 | Phase 2 | Pending |
+| SETT-01 | Phase 2 | Complete |
 
 **Coverage:**
 - v1 requirements: 25 total
