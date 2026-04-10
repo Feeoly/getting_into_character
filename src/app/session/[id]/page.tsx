@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 import { getSessionById } from "../../_lib/sessionRepo";
 import type { Session } from "../../_lib/sessionTypes";
@@ -11,14 +11,14 @@ import { SessionMeta } from "../../_ui/SessionMeta";
 export default function SessionDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const [session, setSession] = useState<Session | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const { id } = params;
 
     (async () => {
       const s = await getSessionById(id);
@@ -33,7 +33,7 @@ export default function SessionDetailPage({
     return () => {
       cancelled = true;
     };
-  }, [params]);
+  }, [id]);
 
   return (
     <main className="px-6 py-8 md:px-12 md:py-12">
