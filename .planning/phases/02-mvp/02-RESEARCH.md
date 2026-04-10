@@ -239,17 +239,15 @@ analyser.fftSize = 2048;
 | A2 | 背景上传与回放主要用 object URL + IndexedDB 持久化即可 | Phase Requirements | iOS/Safari 对大 Blob 存储或回放有问题时需要改为分片/OPFS |
 | A3 | 停顿检测的“能量估计”可用 AnalyserNode 时域数据做 MVP | Architecture / Pitfalls | 若误报过多，需引入更稳的特征（RMS/噪声门限自适应/冷却）或 VAD |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **录制产物要不要“跟随会话”持久保存（跨刷新可回放），还是仅本次临时回放？**
-   - What we know: Phase 02 必须“回放本次录制” (RECD-04)。
-   - What's unclear: 是否必须在刷新/重进后仍可回放（对存储与分片策略影响大）。
-   - Recommendation: 计划里把“本次回放”作为硬门槛；“跨刷新回放”作为可选增强（若产品想要强复盘）。
+1. **录制产物要不要“跟随会话”持久保存（跨刷新可回放），还是仅本次临时回放？（RESOLVED）**
+   - Resolution: Phase 02 **只保证“本次录制结束后可回放本次内容”**（满足 RECD-04）。**跨刷新/重进可回放**作为后续增强（Phase 3+ 或独立优化），避免 Phase 02 被大 Blob/兼容性拖慢。
+   - Plan link: `02-02-PLAN.md` 的验收以“本次回放”为硬门槛，不要求刷新后仍可播放。
 
-2. **目标设备/浏览器最小矩阵（尤其 iOS Safari）**
-   - What we know: STATE.md 已将 iOS Safari 稳定性列为风险。
-   - What's unclear: 是否必须支持 iOS Safari 长录制（3–5min gate）。
-   - Recommendation: 计划里加入“录制稳定性 gate（3–5min）”的手动验证步骤，并把 MIME 探测/分片作为默认实现。
+2. **目标设备/浏览器最小矩阵（尤其 iOS Safari）（RESOLVED）**
+   - Resolution: Phase 02 的最低支持矩阵以 **桌面 Chrome / Edge / Safari（macOS）** 为主；iOS Safari 作为“高风险但不阻塞”的验证项记录在风险与手动验证里。
+   - Plan link: `02-02-PLAN.md` 默认采用 **MIME 探测 + 分片收集**，并加入“3–5 分钟稳定录制”的手动验证项；若 iOS 不稳定，作为后续兼容优化处理。
 
 ## Sources
 
