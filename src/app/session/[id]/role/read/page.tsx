@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { BackToHomeLink } from "../../../../_ui/BackToHomeLink";
 import { getSessionById, markRoleReadAloudComplete } from "../../../../_lib/sessionRepo";
 import type { Session } from "../../../../_lib/sessionTypes";
 import { role } from "../../_lib/roleCopy";
@@ -115,12 +116,15 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
             </h1>
             <p className="mt-1 text-sm text-slate-600">{role.readPageHint}</p>
           </div>
-          <Link
-            href={`/session/${id}`}
-            className="text-sm font-semibold text-blue-600 hover:underline"
-          >
-            {role.backToSession}
-          </Link>
+          <div className="flex flex-wrap items-center gap-4">
+            <BackToHomeLink />
+            <Link
+              href={`/session/${id}`}
+              className="text-sm font-semibold text-blue-600 hover:underline"
+            >
+              {role.backToSession}
+            </Link>
+          </div>
         </div>
 
         <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">

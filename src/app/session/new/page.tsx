@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { createSession } from "../../_lib/sessionRepo";
 import type { SessionScene } from "../../_lib/sessionTypes";
-import { PrimaryButton } from "../../_ui/PrimaryButton";
+import { BackToHomeLink } from "../../_ui/BackToHomeLink";
 
 export default function NewSessionPage() {
   const router = useRouter();
@@ -34,7 +34,10 @@ export default function NewSessionPage() {
   return (
     <main className="px-6 py-8 md:px-12 md:py-12">
       <div className="mx-auto max-w-xl">
-        <h1 className="text-[20px] font-semibold leading-[1.2] text-slate-900">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <BackToHomeLink />
+        </div>
+        <h1 className="mt-3 text-[20px] font-semibold leading-[1.2] text-slate-900">
           新建会话
         </h1>
         <p className="mt-3 text-sm text-slate-700">
@@ -80,10 +83,6 @@ export default function NewSessionPage() {
           <div className="mt-4 text-xs text-slate-500">
             Phase 1：这里只创建会话与状态骨架；录制/转写将在后续阶段加入。
           </div>
-        </div>
-
-        <div className="mt-6">
-          <PrimaryButton href="/">返回首页</PrimaryButton>
         </div>
       </div>
     </main>

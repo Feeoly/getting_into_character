@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
+import { BackToHomeLink } from "../../../../_ui/BackToHomeLink";
 import { getSessionById } from "../../../../_lib/sessionRepo";
 import type { Session } from "../../../../_lib/sessionTypes";
 import { listPauseEventsForTake } from "../../rehearsal/_lib/rehearsalRepo";
@@ -224,6 +225,7 @@ export default function ReviewPage({
             <p className="mt-1 text-xs text-slate-500">{stt.fullPageHint}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <BackToHomeLink />
             <button
               type="button"
               onClick={() =>
@@ -244,7 +246,7 @@ export default function ReviewPage({
             </button>
             <Link
               href={`/session/${id}`}
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
             >
               {review.backToSession}
             </Link>

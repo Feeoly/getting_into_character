@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 
+import { BackToHomeLink } from "../../../_ui/BackToHomeLink";
 import { getSessionById } from "../../../_lib/sessionRepo";
 import type { Session } from "../../../_lib/sessionTypes";
 import {
@@ -312,6 +313,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
           </div>
 
           <div className="flex shrink-0 flex-wrap justify-end gap-2">
+            <BackToHomeLink variant="onDark" />
             <Link
               href={`/session/${id}`}
               className="inline-flex h-11 items-center justify-center rounded-lg border border-white/40 bg-white/10 px-4 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 ring-offset-slate-900 backdrop-blur transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
@@ -335,6 +337,9 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
                 <div className="text-sm font-semibold">会话不存在</div>
                 <div className="mt-2 text-sm text-slate-600">
                   可能已被清理，或链接有误。
+                </div>
+                <div className="mt-4">
+                  <BackToHomeLink />
                 </div>
               </div>
             ) : session && settings ? (

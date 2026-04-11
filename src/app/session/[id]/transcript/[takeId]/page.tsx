@@ -4,6 +4,7 @@ import Link from "next/link";
 import { use, useEffect, useState } from "react";
 import { z } from "zod";
 
+import { BackToHomeLink } from "../../../../_ui/BackToHomeLink";
 import { getSessionById } from "../../../../_lib/sessionRepo";
 import type { Session } from "../../../../_lib/sessionTypes";
 import { listSegmentsForTake } from "../../rehearsal/_lib/transcription/transcriptRepo";
@@ -129,7 +130,8 @@ export default function TranscriptPage({
             </h1>
             <p className="mt-1 text-sm text-slate-500">{stt.fullPageHint}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <BackToHomeLink />
             <button
               type="button"
               onClick={onRetranscribe}
@@ -145,7 +147,7 @@ export default function TranscriptPage({
             </Link>
             <Link
               href={`/session/${id}`}
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
             >
               返回会话
             </Link>

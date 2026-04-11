@@ -5,7 +5,7 @@ import { use, useEffect, useState } from "react";
 
 import { deleteSessionCascade, getSessionById } from "../../_lib/sessionRepo";
 import type { Session } from "../../_lib/sessionTypes";
-import { PrimaryButton } from "../../_ui/PrimaryButton";
+import { BackToHomeLink } from "../../_ui/BackToHomeLink";
 import { SessionActions } from "../../_ui/SessionActions";
 import { SessionMeta } from "../../_ui/SessionMeta";
 import { role } from "./_lib/roleCopy";
@@ -70,7 +70,10 @@ export default function SessionDetailPage({
   return (
     <main className="px-6 py-8 md:px-12 md:py-12">
       <div className="mx-auto max-w-3xl">
-        <h1 className="text-[20px] font-semibold leading-[1.2] text-slate-900">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <BackToHomeLink />
+        </div>
+        <h1 className="mt-3 text-[20px] font-semibold leading-[1.2] text-slate-900">
           会话详情（Phase 1 壳）
         </h1>
 
@@ -121,10 +124,6 @@ export default function SessionDetailPage({
           ) : (
             <div className="text-sm text-slate-600">加载中…</div>
           )}
-        </div>
-
-        <div className="mt-6">
-          <PrimaryButton href="/">返回首页</PrimaryButton>
         </div>
       </div>
     </main>
