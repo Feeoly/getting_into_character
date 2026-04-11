@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 
 import { getSessionById } from "../../../_lib/sessionRepo";
 import type { Session } from "../../../_lib/sessionTypes";
-import { PrimaryButton } from "../../../_ui/PrimaryButton";
 import {
   getRehearsalSettings,
   getUploadedBackground,
@@ -242,7 +242,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
 
       <div className="relative px-6 py-8 md:px-12 md:py-12">
         <div className="mx-auto max-w-3xl">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-[20px] font-semibold leading-[1.2] text-white">
                 排练
@@ -252,13 +252,21 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-white/90 px-4 text-sm font-semibold text-slate-900 shadow-sm outline-none ring-offset-2 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-600"
-            >
-              设置
-            </button>
+            <div className="flex shrink-0 flex-wrap justify-end gap-2">
+              <Link
+                href={`/session/${id}`}
+                className="inline-flex h-11 items-center justify-center rounded-lg border border-white/40 bg-white/10 px-4 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 backdrop-blur transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
+              >
+                返回会话
+              </Link>
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(true)}
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-white/90 px-4 text-sm font-semibold text-slate-900 shadow-sm outline-none ring-offset-2 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-600"
+              >
+                设置
+              </button>
+            </div>
           </div>
 
           <div className="mt-6 space-y-4">
@@ -294,9 +302,6 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
             )}
           </div>
 
-          <div className="mt-6">
-            <PrimaryButton href={`/session/${id}`}>返回会话</PrimaryButton>
-          </div>
         </div>
       </div>
 
