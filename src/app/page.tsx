@@ -7,19 +7,36 @@ import type { Session } from "./_lib/sessionTypes";
 import { EmptyState } from "./_ui/EmptyState";
 import { PrimaryButton } from "./_ui/PrimaryButton";
 import { SessionRow } from "./_ui/SessionRow";
+import {
+  failStaleProcessingJobs,
+  getLatestJobForSession,
+} from "./session/[id]/rehearsal/_lib/transcription/transcriptRepo";
+
+type HomeSessionRow = { session: Session; reviewHref: string | null };
 
 export default function Home() {
-  const [sessions, setSessions] = useState<Session[] | null>(null);
+  const [rows, setRows] = useState<HomeSessionRow[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
       try {
-        const next = await listSessions();
-        if (!cancelled) setSessions(next);
+        const list = await listSessions();
+        await failStaleProcessingJobs();
+        const enriched: HomeSessionRow[] = await Promise.all(
+          list.map(async (session) => {
+            const job = await getLatestJobForSession(session.id);
+            const reviewHref =
+              job?.status === "succeeded"
+                ? `/session/${session.id}/review/${job.takeId}`
+                : null;
+            return { session, reviewHref };
+          }),
+        );
+        if (!cancelled) setRows(enriched);
       } catch {
-        if (!cancelled) setSessions([]);
+        if (!cancelled) setRows([]);
       }
     })();
 
@@ -49,15 +66,18 @@ export default function Home() {
           <div className="text-[20px] font-semibold leading-[1.2] text-slate-900">
             历史会话
           </div>
+          <p className="mt-2 text-sm text-slate-600">
+            转写完成后，可从列表右侧「进入复盘」继续 AI 复盘；左侧仍进入会话详情。
+          </p>
           <div className="mt-4">
-            {sessions === null ? (
+            {rows === null ? (
               <div className="text-sm text-slate-600">加载中…</div>
-            ) : sessions.length === 0 ? (
+            ) : rows.length === 0 ? (
               <EmptyState />
             ) : (
               <div className="space-y-3">
-                {sessions.map((s) => (
-                  <SessionRow key={s.id} session={s} />
+                {rows.map(({ session, reviewHref }) => (
+                  <SessionRow key={session.id} session={session} reviewHref={reviewHref} />
                 ))}
               </div>
             )}
