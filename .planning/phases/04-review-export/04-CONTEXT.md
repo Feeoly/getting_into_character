@@ -30,6 +30,14 @@
 ### AI 复盘（REVI-02 / REVI-03）
 - **D-05:** 用户确认**可以使用类 Chat 的云端能力**生成建议。须与 **PROJECT.md 默认本地**一致：**录音/转写默认仍本地存储**；**仅在用户主动触发「生成建议」且通过明确同意/配置**时，将**题目、答案（用户输入）、节选转写/停顿引用**发往选定模型服务。不得静默上传全文录音。输出须包含 **可执行改进点 + 示例句式**，并**引用转写片段或停顿事件**作为依据（结构可由 planner 定 schema/UI）。具体对接方式（BYOK、服务端代理、模型选型）由 **plan-phase / RESEARCH** 细化。
 
+### AI 复盘 · 技术栈与百炼 Coding Plan（BYOK）
+- **D-06:** 复盘侧采用 **Chat UI**（消息列表 + 输入区 + 可选流式输出），与 `04-UI-SPEC` §5 一致。模型接入由用户提供 **百炼（Bailian）Coding Plan** 的 **Base URL** 与 **API Key**（BYOK），应用**不**把 Key 下发到浏览器。
+- **推荐栈（与现有 Next 16 一致）：**
+  - **前端：** React Client Component；自绘消息气泡与滚动区（无需额外 Chat框架即可满足契约）；若需流式，助手侧用 **`fetch` + `ReadableStream`**（或 EventSource，视百炼响应格式）增量更新最后一条助手消息。
+  - **服务端：** Next.js **App Router Route Handler**（例如 `src/app/api/review/chat/route.ts`）作为**唯一**出站调用点：`Authorization: Bearer <API_KEY>`，请求体为 **OpenAI 兼容**的 `chat/completions` 形态（`messages: [{role, content}, …]`）。具体 path（常见为兼容模式下的 `/chat/completions`）**以百炼控制台对 Coding Plan 给出的 OpenAI 兼容文档为准**。
+  - **环境变量（命名建议，实现时可微调）：** `BAILIAN_BASE_URL`（或 `OPENAI_COMPAT_BASE_URL`，含协议与版本前缀、**无**末尾多余斜杠冲突由实现统一 trim）、`BAILIAN_API_KEY`；可选 `BAILIAN_CHAT_MODEL`（模型 ID 字符串，与控制台可用模型一致）。本地开发写入 **`.env.local`**（勿提交仓库）。
+- **边界：** 发往百炼的 payload **仅为** D-05 允许的文本上下文（题目、作答、转写/停顿摘录）；**不**上传音频 Blob、不附带录音文件 URL。
+
 ### Claude's Discretion
 - 复盘页布局（左右分栏 vs 上下）、播放器控件与无障碍细节  
 - 单 take 删除后会话详情/首页列表的展示与空状态  
@@ -88,6 +96,7 @@
 ## Specific Ideas
 
 - 用户口头确认 AI 侧「可以用 Chat」类能力 →落地为 D-05 显式同意下的云端生成，不与默认本地隐私冲突。  
+- 用户指定 **百炼 Coding Plan**，自行提供 **Base URL + API Key** → 落地为 **D-06** 服务端代理 + BYOK 环境变量。  
 
 </specifics>
 

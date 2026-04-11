@@ -171,8 +171,11 @@ created: 2026-04-11
 - **消息：** 用户右对齐浅灰底气泡；助手左对齐白底+左边框；**引用转写** 用缩进引用样式（REVI-03）。  
 - **发送：** 主按钮 Accent；loading 时按钮 disabled + `ai.loading` 小行于助手侧。  
 - **隐私：** `ai.disclosure` 永久小字在输入框上方（12px 或 Label 降级色）。
+- **实现（与视觉契约并列，供 plan/开发对齐）：** 浏览器只调**同源** `POST /api/.../chat`（路径由 planner 定）；**API Key 仅**在服务端 Route Handler 读取 `BAILIAN_API_KEY`（及 `BAILIAN_BASE_URL` 等，见 **`04-CONTEXT.md` D-06**）。模型为 **百炼 Coding Plan · OpenAI 兼容 Chat**；是否流式以接口能力与成本权衡，不改变本契约的 Chat 布局与同意门闸。
 
-### 6. 导出- **行为：** 客户端组装字符串 →触发下载（与 `saveRecordingToDisk` 模式一致：`showSaveFilePicker` 优先，否则 `<a download>`）。  
+### 6. 导出
+
+- **行为：** 客户端组装字符串 →触发下载（与 `saveRecordingToDisk` 模式一致：`showSaveFilePicker` 优先，否则 `<a download>`）。  
 - **文件名建议：** `gic-review-{sessionShort}-{takeShort}.md` / `.txt`。  
 - **内容：** 以转写分段为主（D-04）；可选页眉一行会话名 + 日期（Claude discretion）。
 
