@@ -8,6 +8,8 @@ const messageSchema = z.object({
 
 const bodySchema = z.object({
   messages: z.array(messageSchema).max(40),
+  /** 默认 true：流式 SSE；false 时返回整段 JSON `{ content }` */
+  stream: z.boolean().optional(),
   context: z
     .object({
       question: z.string().max(8000).optional(),
@@ -19,6 +21,9 @@ const bodySchema = z.object({
 });
 
 const MAX_BODY_CHARS = 32_000;
+
+/** 百炼 OpenAI 兼容；可用 env 覆盖，默认 MiniMax-M2.5 */
+const DEFAULT_CHAT_MODEL = "MiniMax-M2.5";
 
 function countBodyChars(b: z.infer<typeof bodySchema>): number {
   let n = 0;
@@ -66,7 +71,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "上下文过长" }, { status: 400 });
   }
 
-  const model = process.env.BAILIAN_CHAT_MODEL?.trim() || "qwen-turbo";
+  const model = process.env.BAILIAN_CHAT_MODEL?.trim() || DEFAULT_CHAT_MODEL;
+  const useStream = body.stream !== false;
 
   const systemParts: string[] = [
     "你是公务员结构化面试的表达教练。用户正在复盘自己的答题录音与转写。",
@@ -100,7 +106,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model,
         messages: outboundMessages,
-        stream: false,
+        stream: useStream,
       }),
     });
   } catch {
@@ -113,6 +119,19 @@ export async function POST(req: Request) {
       { error: "模型服务返回错误", detail: t.slice(0, 500) },
       { status: 502 },
     );
+  }
+
+  if (useStream) {
+    if (!res.body) {
+      return NextResponse.json({ error: "模型未返回流" }, { status: 502 });
+    }
+    return new Response(res.body, {
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+      },
+    });
   }
 
   const data: unknown = await res.json();

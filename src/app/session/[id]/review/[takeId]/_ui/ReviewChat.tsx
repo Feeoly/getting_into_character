@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ai } from "../../../rehearsal/_lib/transcription/sttCopy";
+import { deltaFromSseDataLine } from "../_lib/parseOpenAiSse";
 
 const CONSENT_KEY = "gic-ai-review-consent-v1";
 
@@ -67,14 +68,16 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: historyForApi,
+          stream: true,
           context: {
             transcriptExcerpt,
             pausesExcerpt,
           },
         }),
       });
-      const data: unknown = await res.json().catch(() => ({}));
+
       if (!res.ok) {
+        const data: unknown = await res.json().catch(() => ({}));
         const msg =
           typeof data === "object" &&
           data !== null &&
@@ -85,6 +88,64 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
         setError(msg);
         return;
       }
+
+      const ct = res.headers.get("content-type") ?? "";
+
+      if (ct.includes("text/event-stream") && res.body) {
+        setMessages((m) => [...m, { role: "assistant", content: "" }]);
+        setLoading(false);
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let carry = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            carry += decoder.decode(value, { stream: true });
+            const lines = carry.split("\n");
+            carry = lines.pop() ?? "";
+            for (const line of lines) {
+              const d = deltaFromSseDataLine(line);
+              if (d === "__done__" || d === null) continue;
+              if (d.length === 0) continue;
+              setMessages((m) => {
+                const next = [...m];
+                const last = next[next.length - 1];
+                if (last?.role === "assistant") {
+                  next[next.length - 1] = { role: "assistant", content: last.content + d };
+                }
+                return next;
+              });
+            }
+          }
+          if (carry.trim()) {
+            const d = deltaFromSseDataLine(carry);
+            if (typeof d === "string" && d.length > 0) {
+              setMessages((m) => {
+                const next = [...m];
+                const last = next[next.length - 1];
+                if (last?.role === "assistant") {
+                  next[next.length - 1] = { role: "assistant", content: last.content + d };
+                }
+                return next;
+              });
+            }
+          }
+        } catch {
+          setError(ai.error);
+          setMessages((m) => {
+            const next = [...m];
+            const last = next[next.length - 1];
+            if (last?.role === "assistant" && last.content === "") next.pop();
+            return next;
+          });
+        }
+        return;
+      }
+
+      const data: unknown = await res.json().catch(() => ({}));
       const content =
         typeof data === "object" &&
         data !== null &&
@@ -124,7 +185,7 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
 
       <div className="mt-4 max-h-[50vh] min-h-[200px] space-y-3 overflow-y-auto rounded-md border border-slate-100 bg-slate-50/80 p-3">
         {messages.length === 0 && !loading ? (
-          <p className="text-sm text-slate-500">在下方输入题目或追问，获取改进建议。</p>
+          <p className="text-sm text-slate-500">{ai.chatEmpty}</p>
         ) : null}
         {messages.map((m, i) =>
           m.role === "user" ? (
@@ -136,7 +197,7 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
           ) : (
             <div key={i} className="flex justify-start">
               <div className="max-w-[85%] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm leading-relaxed text-slate-800">
-                {m.content}
+                {m.content || (i === messages.length - 1 ? ai.loading : "")}
               </div>
             </div>
           ),
