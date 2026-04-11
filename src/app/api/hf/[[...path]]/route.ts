@@ -39,7 +39,10 @@ function normalizePath(
 }
 
 /**
- * 将 HF Hub 请求走同源代理，减轻 Worker 内 fetch huggingface.co 失败（Failed to fetch）的情况。
+ * 将 HF Hub 请求走同源代理。
+ *
+ * 浏览器/Worker 只访问同源 /api/hf（DevTools 里看到 localhost 是预期行为）；
+ * 外网由本机 Next 进程请求 hubOrigin()（502 JSON 里的 target）。
  */
 export async function GET(
   req: NextRequest,
@@ -91,15 +94,27 @@ export async function GET(
   } catch (e) {
     const msg = serializeFetchError(e);
     console.error("[api/hf] upstream fetch failed:", { origin, target, message: msg });
+    const hints: string[] = [
+      "浏览器只会请求同源 http://localhost:.../api/hf/...；502 里的 target 才是 Next 服务端实际访问的外网地址。",
+    ];
+    if (
+      /timeout|ETIMEDOUT|ECONNREFUSED|ENOTFOUND|fetch failed/i.test(msg)
+    ) {
+      hints.push(
+        "当前表示运行 next dev 的这台机器连不上 target 的主机（如 Connect Timeout）。与浏览器地址栏是 localhost 无关；请检查网络/VPN/防火墙。Node 通常不自动使用系统代理。",
+      );
+      if (!process.env.HF_HUB_UPSTREAM && !process.env.HUGGINGFACE_HUB_ENDPOINT) {
+        hints.push(
+          "若 huggingface.co 不可达，可在 .env.local 设置 HF_HUB_UPSTREAM=https://hf-mirror.com 后重启 dev。",
+        );
+      }
+    }
     return new Response(
       JSON.stringify({
         error: "hf_proxy_fetch_failed",
         message: msg,
         target,
-        hint:
-          msg.includes("fetch failed") || msg.includes("ECONNREFUSED") || msg.includes("ENOTFOUND")
-            ? "若本机无法访问 huggingface.co，可在 .env.local 设置 HF_HUB_UPSTREAM=https://hf-mirror.com 后重启 dev"
-            : undefined,
+        hints,
       }),
       { status: 502, headers: { "content-type": "application/json; charset=utf-8" } },
     );
