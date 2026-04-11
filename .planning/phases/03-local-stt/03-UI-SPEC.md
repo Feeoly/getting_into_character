@@ -1,7 +1,7 @@
 ---
 phase: 03
 slug: local-stt
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-11
@@ -77,7 +77,7 @@ created: 2026-04-11
 | Accent (10%) | #2563EB | 主链、进行中点缀、焦点环 |
 | Destructive | #DC2626 | 仅破坏性操作与严重错误强调（本阶段以 toast 内「重试」旁的错误色点缀为限，避免整屏红） |
 
-**Accent reserved for：** 主 CTA/主文字链（如「查看全文转写」）；当前选中的排练轮次或 Tab；键盘焦点环；任务状态 **进行中** 的小号图标或左侧 3px 条（禁止大块铺色）；toast 内「重试」按钮可用 outline/ghost + accent 边框。
+**Accent reserved for：** 主 CTA/主文字链（如「查看全文转写」）；当前选中的排练轮次或 Tab；键盘焦点环；任务状态 **进行中** 的小号图标或左侧 **4px 宽** 竖条（禁止大块铺色）；toast 内「重试转写」按钮可用 outline/ghost + accent 边框。
 
 **Destructive：** 不用于「转写失败」整卡背景；失败态以中性表面 + 文案 + 可选小图标为主，**#DC2626** 仅用于需要用户警惕的短标签或图标（若与 Phase 4 删除对齐时再扩展）。
 
@@ -117,8 +117,8 @@ created: 2026-04-11
 | `stt.initModelSub` | 首次使用可能需数十秒，可离开本页，完成后在会话中查看。 | 副文案，降低焦虑 |
 | `stt.toastFailTitle` | 转写失败 | Toast 标题 |
 | `stt.toastFailBody` | 本地识别未成功，录音仍保留。 | Toast 正文 |
-| `stt.toastRetry` | 重试 | Toast 操作 |
-| `stt.toastDismiss` | 关闭 | Toast 关闭 |
+| `stt.toastRetry` | 重试转写 | Toast 操作 |
+| `stt.toastDismiss` | 知道了 | Toast 关闭 |
 | `stt.inlineRetry` | 重试转写 | 摘要区内联次要按钮（与 toast 二选一或并存由实现定，至少一条重试路径） |
 
 **注：** 英文 UI 不在本阶段范围；引擎 log 不落用户可见串之外的新品牌名。
@@ -144,7 +144,7 @@ created: 2026-04-11
 
 ### 2. 全文转写（只读）
 
-- **布局：** 顶栏 `Heading` + 可选 `fullPageHint`（14px 次要色）。主体为片段列表：每行 **左侧** 时间戳列（固定宽 `72px`～`88px`，`tabular-nums`）+ **右侧** Body 文本，`padding-y: sm`，行间分隔 `1px` #E2E8F0（中性边，非 accent）。
+- **布局：** 顶栏 `Heading` + 可选 `fullPageHint`（14px 次要色）。主体为片段列表：每行 **左侧** 时间戳列（固定宽 `72px`～`88px`，`tabular-nums`）+ **右侧** Body 文本，`padding-y: sm`；行间用 **`gap-y: sm`（8px）** 形成节律，若需线性感知则在相邻行间插入 **高 4px**、宽100%、背景 `#E2E8F0` 的细条（**禁止在契约中写 1px hairline**）。
 - **时间：** 仅展示 **`start_ms` 相对本轮录制起点**（与 `pauseEvents.start_ms` 同源，见 D-09）；格式 `mm:ss`，不足补零。
 - **交互：** 只读，无可编辑字段；可选未来 Phase 4 跳转回放，本阶段 **不**要求点击片段跳转播放器（若实现保留为 enhancement，不得破坏只读契约）。
 - **空：** `emptyFull`。
@@ -152,17 +152,17 @@ created: 2026-04-11
 ### 3. 片段列表行（组件级）
 
 - **结构：** `[时间] [text]`；`idx` 顺序升序。
-- **过长文本：** 默认全展；若单条超 500 字可折叠「展开」*（Claude discretion，优先全展以降低交互噪音）*。
+- **过长文本：** 默认全展；若单条超 500 字可折叠「展开全文」*（Claude discretion，优先全展以降低交互噪音）*。
 
 ### 4. 任务状态徽标（queued / processing / succeeded / failed）
 
-- **视觉：** Pill 或圆角标签，高度 ≥28px，`padding-x: md`。`queued`：中性灰描边 + 灰字。`processing`：Accent 左边条或左侧小圆点动画（**opacity 0.4→1 缓动 1.2s**，禁止旋转 loader 占半屏）。`succeeded`：中性绿灰可选 *（默认仍用中性深字 + 「已完成」避免新色 token）*。`failed`：Destructive 仅用于文字/图标，背景仍为白。
+- **视觉：** Pill 或圆角标签，高度 ≥28px，`padding-x: md`。`queued`：中性灰描边 + 灰字。`processing`：Accent **4px 宽** 左侧竖条或左侧小圆点动画（**opacity 0.4→1 缓动 1.2s**，禁止旋转 loader 占半屏）。`succeeded`：中性绿灰可选 *（默认仍用中性深字 + 「已完成」避免新色 token）*。`failed`：Destructive 仅用于文字/图标，背景仍为白。
 - **映射（实现枚举 ↔ 文案）：** `queued` → 排队中；`processing` → 转写中；`succeeded` → 已完成；`failed` → 失败。
 
 ### 5. 非阻塞失败 Toast + 重试
 
 - **位置：** 视口一角（与 Phase 1/2 全局 toast 策略对齐；默认右下角或底部居中 **择一与现有一致**）。
-- **行为：** `duration` ≥ 6s 或可手动关闭；**不**阻塞路由与点击。主操作「重试」触发同 `takeId` 重新入队（D-06）。
+- **行为：** `duration` ≥ 6s 或可手动关闭；**不**阻塞路由与点击。主操作「重试转写」触发同 `takeId` 重新入队（D-06）。
 - **样式：** 白底 + 轻阴影，`md` padding；标题 Label weight，正文 Body。
 
 ### 6. 「重新转写」（可选控件，D-05）
@@ -180,11 +180,11 @@ created: 2026-04-11
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved (2026-04-11)
