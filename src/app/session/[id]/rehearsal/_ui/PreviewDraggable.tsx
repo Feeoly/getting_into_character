@@ -146,8 +146,10 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
                 />
               )
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs font-semibold text-white/80">
-                {mode === "live" ? "未开启摄像头" : "无视频回放"}
+              <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs font-semibold text-white/80">
+                {mode === "live"
+                  ? "暂无画面（设置里开启摄像头或录屏）"
+                  : "无视频回放"}
               </div>
             )}
 

@@ -227,23 +227,57 @@ export function SettingsDrawer({
           </section>
 
           <section className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="text-sm font-semibold text-slate-900">摄像头</div>
-            <div className="mt-3 flex items-center justify-between gap-4">
-              <div className="text-sm text-slate-600">录制时启用摄像头（可选）</div>
+            <div className="text-sm font-semibold text-slate-900">画面来源（二选一）</div>
+            <div className="mt-2 text-sm text-slate-600">
+              默认仅录麦克风。需要画面时，可选摄像头或屏幕/窗口共享；与另一项互斥。
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-4">
+              <div className="text-sm text-slate-600">摄像头</div>
               <button
                 type="button"
-                onClick={() => onChange({ ...settings, cameraEnabled: !settings.cameraEnabled })}
+                onClick={() => {
+                  const nextCam = !settings.cameraEnabled;
+                  onChange({
+                    ...settings,
+                    cameraEnabled: nextCam,
+                    screenShareEnabled: nextCam ? false : settings.screenShareEnabled,
+                  });
+                }}
                 className={`inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold outline-none ring-offset-2 transition focus-visible:ring-2 focus-visible:ring-blue-600 ${
                   settings.cameraEnabled
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "border border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
                 }`}
               >
-                {settings.cameraEnabled ? "已开启" : "默认关闭"}
+                {settings.cameraEnabled ? "已开启" : "关闭"}
               </button>
             </div>
-            <div className="mt-2 text-sm text-slate-600">
-              只有你点击“开始录制”时才会请求权限。
+
+            <div className="mt-4 flex items-center justify-between gap-4">
+              <div className="text-sm text-slate-600">录屏（窗口/屏幕）</div>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextScreen = !settings.screenShareEnabled;
+                  onChange({
+                    ...settings,
+                    screenShareEnabled: nextScreen,
+                    cameraEnabled: nextScreen ? false : settings.cameraEnabled,
+                  });
+                }}
+                className={`inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold outline-none ring-offset-2 transition focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                  settings.screenShareEnabled
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "border border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+                }`}
+              >
+                {settings.screenShareEnabled ? "已开启" : "关闭"}
+              </button>
+            </div>
+
+            <div className="mt-3 text-sm text-slate-600">
+              点击「开始录制」后才会弹出权限：先选屏幕/窗口（若开启录屏），再允许麦克风。
             </div>
           </section>
 

@@ -42,6 +42,10 @@ function coerceSettings(
       typeof input.pausePromptEnabled === "boolean"
         ? input.pausePromptEnabled
         : base.pausePromptEnabled,
+    screenShareEnabled:
+      typeof input.screenShareEnabled === "boolean"
+        ? input.screenShareEnabled
+        : base.screenShareEnabled,
     backgroundSource,
     updatedAt: Date.now(),
   };

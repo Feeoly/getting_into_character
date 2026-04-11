@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { RehearsalSettings } from "../_lib/rehearsalTypes";
 import {
@@ -15,6 +15,8 @@ type Status = "idle" | "requesting" | "recording" | "stopped" | "error";
 
 type Props = {
   settings: RehearsalSettings;
+  /** 父级持有的当前媒体流，用于监听屏幕共享被用户终止等 */
+  liveStream: MediaStream | null;
   onLiveStreamChange: (stream: MediaStream | null) => void;
   onPlaybackChange: (playback: StopRecordingResult | null) => void;
   onRecordingEpochStart: (epochMs: number | null) => void;
@@ -33,6 +35,7 @@ function toMessage(e: unknown): string {
 
 export function RecorderPanel({
   settings,
+  liveStream,
   onLiveStreamChange,
   onPlaybackChange,
   onRecordingEpochStart,
@@ -46,43 +49,10 @@ export function RecorderPanel({
   const startedAtRef = useRef<number | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
 
-  useEffect(() => {
-    if (status !== "recording") return;
-    const t = window.setInterval(() => {
-      const startedAt = startedAtRef.current;
-      if (!startedAt) return;
-      setElapsedSec(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
-    }, 250);
-    return () => window.clearInterval(t);
-  }, [status]);
-
   const canStart = useMemo(() => status === "idle" || status === "stopped" || status === "error", [status]);
   const canStop = useMemo(() => status === "recording" || status === "requesting", [status]);
 
-  async function onStart() {
-    setError(null);
-    setStatus("requesting");
-    onPlaybackChange(null);
-    setPlayback(null);
-    try {
-      const res = await startRecording({ cameraEnabled: settings.cameraEnabled });
-      setKind(res.kind);
-      setMimeType(res.mimeType ?? null);
-      onLiveStreamChange(res.stream);
-      const now = Date.now();
-      startedAtRef.current = now;
-      onRecordingEpochStart(now);
-      setElapsedSec(0);
-      setStatus("recording");
-    } catch (e) {
-      onLiveStreamChange(null);
-      onRecordingEpochStart(null);
-      setStatus("error");
-      setError(toMessage(e));
-    }
-  }
-
-  async function onStop() {
+  const onStop = useCallback(async () => {
     setError(null);
     setStatus("requesting");
     try {
@@ -98,7 +68,59 @@ export function RecorderPanel({
       setStatus("error");
       setError(toMessage(e));
     }
-  }
+  }, [onLiveStreamChange, onPlaybackChange, onRecordingEpochStart]);
+
+  const onStart = useCallback(async () => {
+    setError(null);
+    setStatus("requesting");
+    onPlaybackChange(null);
+    setPlayback(null);
+    try {
+      const res = await startRecording({
+        cameraEnabled: settings.cameraEnabled,
+        screenShareEnabled: settings.screenShareEnabled,
+      });
+      setKind(res.kind);
+      setMimeType(res.mimeType ?? null);
+      onLiveStreamChange(res.stream);
+      const now = Date.now();
+      startedAtRef.current = now;
+      onRecordingEpochStart(now);
+      setElapsedSec(0);
+      setStatus("recording");
+    } catch (e) {
+      onLiveStreamChange(null);
+      onRecordingEpochStart(null);
+      setStatus("error");
+      setError(toMessage(e));
+    }
+  }, [
+    onLiveStreamChange,
+    onPlaybackChange,
+    onRecordingEpochStart,
+    settings.cameraEnabled,
+    settings.screenShareEnabled,
+  ]);
+
+  useEffect(() => {
+    if (status !== "recording" || !liveStream) return;
+    const vts = liveStream.getVideoTracks();
+    const onEnded = () => {
+      void onStop();
+    };
+    vts.forEach((t) => t.addEventListener("ended", onEnded));
+    return () => vts.forEach((t) => t.removeEventListener("ended", onEnded));
+  }, [status, liveStream, onStop]);
+
+  useEffect(() => {
+    if (status !== "recording") return;
+    const t = window.setInterval(() => {
+      const startedAt = startedAtRef.current;
+      if (!startedAt) return;
+      setElapsedSec(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)));
+    }, 250);
+    return () => window.clearInterval(t);
+  }, [status]);
 
   useEffect(() => {
     return () => {
@@ -107,25 +129,31 @@ export function RecorderPanel({
   }, [playback?.url]);
 
   return (
-    <div className="rounded-lg border border-white/30 bg-white/90 px-6 py-5 backdrop-blur">
+    <div className="rounded-2xl border border-white/25 bg-black/45 px-5 py-4 text-white shadow-lg backdrop-blur-md">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-slate-900">录制</div>
-          <div className="mt-1 text-sm text-slate-600">
+          <div className="text-sm font-semibold">录制</div>
+          <div className="mt-1 text-sm text-white/80">
             {status === "recording" ? (
               <>
-                录制中 · {formatSec(elapsedSec)}（{kind === "video" ? "音频+视频" : "仅音频"}）
+                录制中 · {formatSec(elapsedSec)}（
+                {kind === "video"
+                  ? settings.screenShareEnabled
+                    ? "麦克风 + 屏幕"
+                    : "麦克风 + 摄像头"
+                  : "仅麦克风"}
+                ）
               </>
             ) : status === "requesting" ? (
               <>处理中…</>
             ) : status === "stopped" ? (
               <>已停止，可回放本次内容</>
             ) : (
-              <>点击开始后才会请求权限</>
+              <>点击开始后才会请求权限（麦克风；若开启摄像头或录屏会额外请求）</>
             )}
           </div>
           {mimeType ? (
-            <div className="mt-1 text-xs text-slate-500">格式：{mimeType}</div>
+            <div className="mt-1 text-xs text-white/60">格式：{mimeType}</div>
           ) : null}
         </div>
 
@@ -134,7 +162,7 @@ export function RecorderPanel({
             type="button"
             disabled={!canStart}
             onClick={() => void onStart()}
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600 disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
           >
             开始录制
           </button>
@@ -142,14 +170,14 @@ export function RecorderPanel({
             type="button"
             disabled={!canStop}
             onClick={() => void onStop()}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-900 outline-none ring-offset-2 transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-600 disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-white/30 bg-white/10 px-6 text-sm font-semibold text-white outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
           >
             结束录制
           </button>
         </div>
       </div>
 
-      {error ? <div className="mt-3 text-sm text-red-600">{error}</div> : null}
+      {error ? <div className="mt-3 text-sm text-red-300">{error}</div> : null}
 
       {playback ? (
         <div className="mt-4">

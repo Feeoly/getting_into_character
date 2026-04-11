@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 
@@ -210,8 +209,9 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
   }
 
   return (
-    <main className="relative min-h-dvh">
-      <div className="absolute inset-0">
+    <main className="relative min-h-dvh overflow-x-hidden text-white">
+      {/* 全屏沉浸背景（fixed 避免与 flex 子项高度互相影响导致不铺满） */}
+      <div className="pointer-events-none fixed inset-0 z-0">
         {background.kind === "video" ? (
           <video
             className="h-full w-full object-cover"
@@ -222,86 +222,78 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
             playsInline
           />
         ) : (
-          <>
-            {background.src.startsWith("blob:") ? (
-              <img className="h-full w-full object-cover" src={background.src} alt="" />
-            ) : (
-              <Image
-                className="object-cover"
-                src={background.src}
-                alt=""
-                fill
-                sizes="100vw"
-                priority
-              />
-            )}
-          </>
+          <img
+            className="h-full w-full object-cover"
+            src={background.src}
+            alt=""
+            decoding="async"
+            fetchPriority="high"
+          />
         )}
-        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/15 to-black/65" />
       </div>
 
-      <div className="relative px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-3xl">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h1 className="text-[20px] font-semibold leading-[1.2] text-white">
-                排练
-              </h1>
-              <div className="mt-2 text-sm text-white/80">
-                内容默认保存在本地，不会上传。
-              </div>
-            </div>
-
-            <div className="flex shrink-0 flex-wrap justify-end gap-2">
-              <Link
-                href={`/session/${id}`}
-                className="inline-flex h-11 items-center justify-center rounded-lg border border-white/40 bg-white/10 px-4 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 backdrop-blur transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
-              >
-                返回会话
-              </Link>
-              <button
-                type="button"
-                onClick={() => setDrawerOpen(true)}
-                className="inline-flex h-11 items-center justify-center rounded-lg bg-white/90 px-4 text-sm font-semibold text-slate-900 shadow-sm outline-none ring-offset-2 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-600"
-              >
-                设置
-              </button>
+      <div className="relative z-10 flex min-h-dvh flex-col px-4 pb-6 pt-4 md:px-8 md:pb-8 md:pt-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-[20px] font-semibold leading-[1.2] tracking-tight drop-shadow-sm">
+              排练
+            </h1>
+            <div className="mt-1 max-w-md text-sm text-white/85 drop-shadow-sm">
+              内容默认保存在本地，不会上传。背景铺满全屏，预览在底部中间。
             </div>
           </div>
 
-          <div className="mt-6 space-y-4">
+          <div className="flex shrink-0 flex-wrap justify-end gap-2">
+            <Link
+              href={`/session/${id}`}
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-white/40 bg-white/10 px-4 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 ring-offset-slate-900 backdrop-blur transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
+            >
+              返回会话
+            </Link>
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-white/90 px-4 text-sm font-semibold text-slate-900 shadow-sm outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-600"
+            >
+              设置
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-1 flex-col justify-end">
+          <div className="mx-auto w-full max-w-3xl space-y-4">
             {notFound ? (
-              <div className="rounded-lg border border-slate-200 bg-white px-6 py-8">
-                <div className="text-sm font-semibold text-slate-900">会话不存在</div>
+              <div className="rounded-2xl border border-white/20 bg-white/95 px-6 py-8 text-slate-900 shadow-xl backdrop-blur">
+                <div className="text-sm font-semibold">会话不存在</div>
                 <div className="mt-2 text-sm text-slate-600">
                   可能已被清理，或链接有误。
                 </div>
               </div>
             ) : session && settings ? (
-              <div className="space-y-4">
-                <div className="rounded-lg border border-white/30 bg-white/90 px-6 py-5 backdrop-blur">
-                  <div className="text-sm font-semibold text-slate-900">
+              <>
+                <div className="rounded-2xl border border-white/25 bg-black/40 px-5 py-4 shadow-lg backdrop-blur-md">
+                  <div className="text-sm font-semibold">
                     {session.name ? `会话：${session.name}` : "会话已加载"}
                   </div>
-                  <div className="mt-2 text-sm text-slate-600">
-                    你可以先调好背景与设置，再开始录制。
+                  <div className="mt-1 text-sm text-white/80">
+                    先打开「设置」选好背景；需要画面时再开启摄像头或录屏。
                   </div>
-
-                  {error ? <div className="mt-3 text-sm text-red-600">{error}</div> : null}
+                  {error ? <div className="mt-2 text-sm text-red-300">{error}</div> : null}
                 </div>
 
                 <RecorderPanel
                   settings={settings}
+                  liveStream={liveStream}
                   onLiveStreamChange={setLiveStream}
                   onPlaybackChange={setPlayback}
                   onRecordingEpochStart={setRecordingEpochStartMs}
                 />
-              </div>
+              </>
             ) : (
-              <div className="text-sm text-white/80">加载中…</div>
+              <div className="text-sm text-white/85 drop-shadow-sm">加载中…</div>
             )}
           </div>
-
         </div>
       </div>
 
