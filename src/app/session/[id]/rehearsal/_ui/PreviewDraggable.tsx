@@ -14,16 +14,12 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 
-function isMobile() {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(max-width: 640px)").matches;
-}
-
 export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [pos, setPos] = useState<Pos | null>(null);
   const [dragging, setDragging] = useState(false);
+  /** 仅用户手动收起；不在窄屏默认收起（否则 Cursor 内置预览宽度易 <640px，且收起时未挂载 video 会导致 srcObject 从未绑定） */
   const [collapsed, setCollapsed] = useState(false);
 
   const hasVideoTrack = useMemo(() => {
@@ -31,16 +27,29 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     return Boolean(liveStream?.getVideoTracks?.().length);
   }, [liveStream, playbackUrl, mode]);
 
+  // 始终在有 ref 时绑定 live 流并尝试播放（收起态也挂载 video，避免漏绑）
   useEffect(() => {
-    setCollapsed(isMobile());
-  }, []);
+    const v = videoRef.current;
+    if (!v) return;
 
-  useEffect(() => {
-    if (!videoRef.current) return;
-    if (mode !== "live") return;
-    if (!liveStream) return;
-    videoRef.current.srcObject = liveStream;
-  }, [liveStream, mode]);
+    if (mode === "live" && liveStream) {
+      v.srcObject = liveStream;
+      void v.play().catch(() => {
+        /* 部分环境需用户手势后才可 play，开始录制已算手势 */
+      });
+      return;
+    }
+
+    if (mode === "playback" && playbackUrl) {
+      v.srcObject = null;
+      v.src = playbackUrl;
+      void v.play().catch(() => {});
+      return;
+    }
+
+    v.srcObject = null;
+    v.removeAttribute("src");
+  }, [liveStream, mode, playbackUrl, collapsed]);
 
   useEffect(() => {
     if (!pos) return;
@@ -54,8 +63,8 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     if (typeof window === "undefined") return;
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const defaultW = collapsed ? 56 : 240;
-    const defaultH = collapsed ? 56 : 160;
+    const defaultW = collapsed ? 72 : 280;
+    const defaultH = collapsed ? 72 : 168;
     setPos({
       x: Math.round((w - defaultW) / 2),
       y: Math.round(h - defaultH - 24),
@@ -65,6 +74,10 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
   function handlePointerDown(e: React.PointerEvent) {
     if (!pos) return;
     if (!rootRef.current) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("button") && target.closest("button") !== e.currentTarget) {
+      return;
+    }
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     setDragging(true);
 
@@ -99,12 +112,12 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
 
   if (!pos) return null;
 
-  const size = collapsed ? { w: 56, h: 56 } : { w: 240, h: 160 };
+  const size = collapsed ? { w: 72, h: 72 } : { w: 280, h: 168 };
 
   return (
     <div
       ref={rootRef}
-      className={`fixed z-40 select-none ${
+      className={`fixed z-[45] select-none ${
         dragging ? "cursor-grabbing" : "cursor-grab"
       }`}
       style={{
@@ -114,59 +127,53 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
       }}
       onPointerDown={handlePointerDown}
     >
-      <div className="relative h-full w-full overflow-hidden rounded-xl border border-white/30 bg-black/50 shadow-lg backdrop-blur">
-        {collapsed ? (
+      <div
+        className={`relative h-full w-full overflow-hidden border border-white/30 bg-black/60 shadow-xl backdrop-blur-md ${
+          collapsed ? "rounded-full" : "rounded-xl"
+        }`}
+      >
+        {hasVideoTrack ? (
+          <video
+            ref={videoRef}
+            className="absolute inset-0 h-full w-full object-cover"
+            autoPlay
+            muted
+            playsInline
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs font-semibold text-white/80">
+            {mode === "live"
+              ? "暂无画面（设置里开启摄像头或录屏）"
+              : "无视频回放"}
+          </div>
+        )}
+
+        {collapsed && hasVideoTrack ? (
           <button
             type="button"
-            className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-white"
+            className="absolute inset-0 z-10 flex items-end justify-center rounded-full bg-gradient-to-t from-black/70 via-black/20 to-transparent pb-1.5 text-[10px] font-semibold text-white/95"
             onClick={(e) => {
               e.stopPropagation();
               setCollapsed(false);
             }}
           >
-            预览
+            展开
           </button>
-        ) : (
-          <>
-            {hasVideoTrack ? (
-              mode === "playback" ? (
-                <video
-                  className="h-full w-full object-cover"
-                  src={playbackUrl ?? undefined}
-                  muted
-                  playsInline
-                />
-              ) : (
-                <video
-                  ref={videoRef}
-                  className="h-full w-full object-cover"
-                  autoPlay
-                  muted
-                  playsInline
-                />
-              )
-            ) : (
-              <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs font-semibold text-white/80">
-                {mode === "live"
-                  ? "暂无画面（设置里开启摄像头或录屏）"
-                  : "无视频回放"}
-              </div>
-            )}
+        ) : null}
 
-            <button
-              type="button"
-              className="absolute right-2 top-2 inline-flex h-9 items-center justify-center rounded-lg bg-white/90 px-3 text-xs font-semibold text-slate-900 outline-none ring-offset-2 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                setCollapsed(true);
-              }}
-            >
-              收起
-            </button>
-          </>
-        )}
+        {!collapsed && hasVideoTrack ? (
+          <button
+            type="button"
+            className="absolute right-1.5 top-1.5 z-10 inline-flex h-8 items-center justify-center rounded-lg bg-white/90 px-2.5 text-xs font-semibold text-slate-900 outline-none ring-offset-2 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-600"
+            onClick={(e) => {
+              e.stopPropagation();
+              setCollapsed(true);
+            }}
+          >
+            收起
+          </button>
+        ) : null}
       </div>
     </div>
   );
 }
-
