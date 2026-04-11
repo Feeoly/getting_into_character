@@ -12,7 +12,9 @@ import {
   saveUploadedBackground,
 } from "./_lib/rehearsalRepo";
 import type { RehearsalSettings } from "./_lib/rehearsalTypes";
+import type { StopRecordingResult } from "./_lib/recording";
 import { SettingsDrawer } from "./_ui/SettingsDrawer";
+import { PreviewDraggable } from "./_ui/PreviewDraggable";
 import { RecorderPanel } from "./_ui/RecorderPanel";
 import { PauseToast } from "./_ui/PauseToast";
 import { createPauseDetector } from "./_lib/pauseDetector";
@@ -33,6 +35,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
   const [error, setError] = useState<string | null>(null);
 
   const [liveStream, setLiveStream] = useState<MediaStream | null>(null);
+  const [playback, setPlayback] = useState<StopRecordingResult | null>(null);
   const [recordingEpochStartMs, setRecordingEpochStartMs] = useState<number | null>(null);
 
   const [toastText, setToastText] = useState<string | null>(null);
@@ -302,6 +305,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
                   settings={settings}
                   liveStream={liveStream}
                   onLiveStreamChange={setLiveStream}
+                  onPlaybackChange={setPlayback}
                   onRecordingEpochStart={setRecordingEpochStartMs}
                 />
               </>
@@ -321,6 +325,15 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
           onChange={(next) => void persist(next)}
           onUploadImage={onUploadImage}
           error={error}
+        />
+      ) : null}
+
+      {/* 结束录制后的视频回放只在面板主区域展示，避免与 PiP 重复 */}
+      {playback?.kind !== "video" ? (
+        <PreviewDraggable
+          mode={playback ? "playback" : "live"}
+          liveStream={liveStream}
+          playbackUrl={null}
         />
       ) : null}
 
