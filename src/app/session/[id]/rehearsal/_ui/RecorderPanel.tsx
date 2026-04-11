@@ -73,8 +73,11 @@ export function RecorderPanel({
   const onStart = useCallback(async () => {
     setError(null);
     setStatus("requesting");
+    setPlayback((prev) => {
+      if (prev?.url) URL.revokeObjectURL(prev.url);
+      return null;
+    });
     onPlaybackChange(null);
-    setPlayback(null);
     try {
       const res = await startRecording({
         cameraEnabled: settings.cameraEnabled,
@@ -121,12 +124,6 @@ export function RecorderPanel({
     }, 250);
     return () => window.clearInterval(t);
   }, [status]);
-
-  useEffect(() => {
-    return () => {
-      if (playback?.url) URL.revokeObjectURL(playback.url);
-    };
-  }, [playback?.url]);
 
   return (
     <div className="rounded-2xl border border-white/25 bg-black/45 px-5 py-4 text-white shadow-lg backdrop-blur-md">

@@ -18,6 +18,8 @@ export type StopRecordingResult = {
   url: string;
   mimeType: string;
   kind: RecordingKind;
+  /** 单次录制轮次，用于转写与 Dexie 关联 */
+  takeId: string;
 };
 
 export type RecordingError = {
@@ -229,7 +231,11 @@ export async function stopRecording(): Promise<StopRecordingResult> {
     const mimeType = recorder.mimeType || "application/octet-stream";
     const blob = new Blob(chunks, { type: mimeType });
     const url = URL.createObjectURL(blob);
-    const result: StopRecordingResult = { blob, url, mimeType, kind };
+    const takeId =
+      typeof globalThis.crypto?.randomUUID === "function"
+        ? globalThis.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const result: StopRecordingResult = { blob, url, mimeType, kind, takeId };
 
     safeStopTracks(stream);
     current = null;

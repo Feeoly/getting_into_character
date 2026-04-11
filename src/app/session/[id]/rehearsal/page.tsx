@@ -17,6 +17,13 @@ import { SettingsDrawer } from "./_ui/SettingsDrawer";
 import { PreviewDraggable } from "./_ui/PreviewDraggable";
 import { RecorderPanel } from "./_ui/RecorderPanel";
 import { PauseToast } from "./_ui/PauseToast";
+import { SttToast } from "./_lib/transcription/SttToast";
+import {
+  enqueueTranscriptionAfterRecording,
+  startTranscriptionRunner,
+  subscribeTranscriptionModelLoading,
+} from "./_lib/transcription/transcriptionRunner";
+import { stt } from "./_lib/transcription/sttCopy";
 import { createPauseDetector } from "./_lib/pauseDetector";
 import { addPauseEvent } from "./_lib/rehearsalRepo";
 
@@ -39,12 +46,14 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
   const [recordingEpochStartMs, setRecordingEpochStartMs] = useState<number | null>(null);
 
   const [toastText, setToastText] = useState<string | null>(null);
+  const [modelLoading, setModelLoading] = useState(false);
   const toastTimerRef = useRef<number | null>(null);
   const currentPausePromptShownRef = useRef(false);
   const currentPauseStartEpochRef = useRef<number | null>(null);
 
   const [uploadedBgUrl, setUploadedBgUrl] = useState<string | null>(null);
   const uploadedBgUrlRef = useRef<string | null>(null);
+  const enqueuedTakeIdsRef = useRef<Set<string>>(new Set());
 
   const uploadedBackgroundAvailable = Boolean(settings?.uploadedBackgroundId);
 
@@ -197,6 +206,27 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
     };
   }, [settings?.uploadedBackgroundId]);
 
+  useEffect(() => {
+    return subscribeTranscriptionModelLoading(setModelLoading);
+  }, []);
+
+  useEffect(() => {
+    startTranscriptionRunner();
+  }, []);
+
+  useEffect(() => {
+    if (!session || !playback) return;
+    if (playback.blob.size === 0) return;
+    if (enqueuedTakeIdsRef.current.has(playback.takeId)) return;
+    enqueuedTakeIdsRef.current.add(playback.takeId);
+    void enqueueTranscriptionAfterRecording({
+      sessionId: id,
+      takeId: playback.takeId,
+      blob: playback.blob,
+      mimeType: playback.mimeType,
+    });
+  }, [session, playback, id]);
+
   async function persist(next: RehearsalSettings) {
     setError(null);
     setSettings(next);
@@ -338,6 +368,17 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
       ) : null}
 
       <PauseToast text={toastText} />
+
+      {modelLoading ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4">
+          <div className="max-w-lg rounded-lg border border-white/25 bg-black/55 px-4 py-2 text-center text-sm text-white shadow-lg backdrop-blur-md">
+            <div className="font-semibold">{stt.initModel}</div>
+            <div className="mt-1 text-xs text-white/80">{stt.initModelSub}</div>
+          </div>
+        </div>
+      ) : null}
+
+      <SttToast sessionId={id} />
     </main>
   );
 }

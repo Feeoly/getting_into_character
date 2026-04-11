@@ -7,6 +7,7 @@ import type { Session } from "../../_lib/sessionTypes";
 import { PrimaryButton } from "../../_ui/PrimaryButton";
 import { SessionActions } from "../../_ui/SessionActions";
 import { SessionMeta } from "../../_ui/SessionMeta";
+import { TranscriptSummaryCard } from "./rehearsal/_lib/transcription/TranscriptSummaryCard";
 
 export default function SessionDetailPage({
   params,
@@ -53,6 +54,7 @@ export default function SessionDetailPage({
           ) : session ? (
             <>
               <SessionMeta session={session} />
+              <TranscriptSummaryCard sessionId={session.id} />
               <SessionActions session={session} onUpdated={setSession} />
               <div className="rounded-lg border border-slate-200 bg-white px-6 py-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">

@@ -2,7 +2,7 @@
 
 - [ ] **Phase 1: 信任基线与会话骨架** - 本地优先的数据流、权限/状态可见性、会话创建与历史列表
 - [ ] **Phase 2: 排练页录制与停顿事件 MVP** - 背景 + 录制回放 + 停顿提醒/记录 + 基础设置
-- [ ] **Phase 3: 本地转写管线（可插拔引擎）** - 录后转写为文本并带时间信息，默认不上传
+- [x] **Phase 3: 本地转写管线（可插拔引擎）** - 录后转写为文本并带时间信息，默认不上传
 - [ ] **Phase 4: 复盘闭环 + 导出/删除** - 复盘页可基于文本/停顿快速复盘，支持导出与一键清理
 - [ ] **Phase 5: 角色卡差异化 + 证据锚定建议** - 角色进入（生成+朗读）与“可执行建议+例句+依据”输出契约
 
@@ -50,9 +50,9 @@ Plans:
   3. 在断网情况下，核心流程仍可运行，且转写默认不上传（用户可通过可观察行为验证：无上传依赖、无“必须联网才能转写”的路径）
 **Plans**: 3 plans
 Plans:
-- [ ] 03-01-PLAN.md — Dexie 转写表 + Zod + transcriptRepo + TranscriptionEngine + noop 占位
-- [ ] 03-02-PLAN.md — Worker + HF Whisper ONNX 管线 + 录制结束入队 + takeId + 替换策略落地
-- [ ] 03-03-PLAN.md — 会话摘要卡片 + 全文只读路由 + Toast/重试/初始化条（UI-SPEC）
+- [x] 03-01-PLAN.md — Dexie 转写表 + Zod + transcriptRepo + TranscriptionEngine + noop 占位
+- [x] 03-02-PLAN.md — Worker + HF Whisper ONNX 管线 + 录制结束入队 + takeId + 替换策略落地
+- [x] 03-03-PLAN.md — 会话摘要卡片 + 全文只读路由 + Toast/重试/初始化条（UI-SPEC）
 **UI hint**: yes
 
 ### Phase 4: 复盘闭环 + 导出/删除
@@ -85,7 +85,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. 信任基线与会话骨架 | 0/2 | Not started | - |
 | 2. 排练页录制与停顿事件 MVP | 0/0 | Not started | - |
-| 3. 本地转写管线（可插拔引擎） | 0/3 | Ready to execute | - |
+| 3. 本地转写管线（可插拔引擎） | 3/3 | Complete | 2026-04-11 |
 | 4. 复盘闭环 + 导出/删除 | 0/0 | Not started | - |
 | 5. 角色卡差异化 + 证据锚定建议 | 0/0 | Not started | - |
 
