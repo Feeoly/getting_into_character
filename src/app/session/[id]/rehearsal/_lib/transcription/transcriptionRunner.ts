@@ -11,6 +11,7 @@ import {
   markJobFailed,
   markJobProcessing,
   markJobSucceeded,
+  supersedeActiveJobsForTake,
 } from "./transcriptRepo";
 
 /** STT-03：验收时可对照 — ① DevTools Network 中不应出现第三方「语音转写 SaaS」API；② 仅 HF 静态权重域名（如 cdn-lfs.huggingface.co）的 GET。 */
@@ -152,26 +153,35 @@ export async function enqueueTranscriptionAfterRecording(
   void drainQueue();
 }
 
+/**
+ * @returns 是否已成功重新入队（false：无可用录音 Blob等）
+ */
 export async function retryTranscriptionForTake(
   sessionId: string,
   takeId: string,
-): Promise<void> {
-  if (typeof window === "undefined") return;
+): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  startTranscriptionRunner();
+  await supersedeActiveJobsForTake(takeId);
   const prev = await getLatestJobForTake(sessionId, takeId);
-  if (!prev) return;
-  if (await hasPendingJobForTake(takeId)) return;
+  if (!prev || prev.audioBlob.size === 0) return false;
 
-  const jobId = await enqueueTranscriptionJob({
-    sessionId,
-    takeId,
-    blob: prev.audioBlob.slice(0, prev.audioBlob.size),
-    mimeType: prev.mimeType,
-    duration_ms: prev.duration_ms,
-    engineId: HF_TRANSCRIPTION_ENGINE_ID,
-    modelId: WHISPER_MODEL_ID,
-  });
-  pushJobToQueue(jobId);
-  void drainQueue();
+  try {
+    const jobId = await enqueueTranscriptionJob({
+      sessionId,
+      takeId,
+      blob: prev.audioBlob.slice(0, prev.audioBlob.size),
+      mimeType: prev.mimeType,
+      duration_ms: prev.duration_ms,
+      engineId: HF_TRANSCRIPTION_ENGINE_ID,
+      modelId: WHISPER_MODEL_ID,
+    });
+    pushJobToQueue(jobId);
+    void drainQueue();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function drainQueue() {
@@ -306,8 +316,12 @@ async function processJob(jobId: string) {
         [copy.buffer],
       );
     });
+    const liveOk = await getJob(jobId);
+    if (!liveOk || liveOk.status !== "processing") return;
     await markJobSucceeded(jobId, chunks);
   } catch (e) {
+    const liveFail = await getJob(jobId);
+    if (!liveFail || liveFail.status !== "processing") return;
     await markJobFailed(
       jobId,
       "worker_error",

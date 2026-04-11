@@ -182,6 +182,20 @@ export async function listProcessingJobIds(): Promise<string[]> {
   return rows.map((r) => r.id);
 }
 
+/** 用户点「重试转写」时：取消该 take 下仍占着位的 queued/processing，否则 hasPending 会一直拦住重试 */
+export async function supersedeActiveJobsForTake(takeId: string): Promise<void> {
+  const rows = await db.transcriptionJobs.where("takeId").equals(takeId).toArray();
+  for (const r of rows) {
+    if (r.status === "queued" || r.status === "processing") {
+      await markJobFailed(
+        r.id,
+        "superseded",
+        "已取消（用户重试或新任务取代）。",
+      );
+    }
+  }
+}
+
 export async function getLatestJobForSession(
   sessionId: string,
 ): Promise<TranscriptionJobRow | null> {

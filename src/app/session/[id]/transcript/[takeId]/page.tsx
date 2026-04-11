@@ -83,7 +83,11 @@ export default function TranscriptPage({
   function onRetranscribe() {
     if (!session) return;
     if (!window.confirm(stt.confirmRetranscribe)) return;
-    void retryTranscriptionForTake(session.id, takeId);
+    void (async () => {
+      const ok = await retryTranscriptionForTake(session.id, takeId);
+      if (!ok) window.alert(stt.retryNoBlob);
+      setTick((x) => x + 1);
+    })();
   }
 
   if (badTake) {

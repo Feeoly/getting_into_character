@@ -24,6 +24,7 @@ export const stt = {
     "结束录制后将自动在本地生成转写。若刚结束录制，请稍候；仍无结果可尝试「重新转写」。",
   confirmRetranscribe:
     "将用当前音频重新生成转写并替换已有全文与摘要。确定继续？",
+  retryNoBlob: "没有可用的本地录音，请进入排练重新录制后再试。",
 } as const;
 
 export function previewSnippet(text: string, max = 140): string {

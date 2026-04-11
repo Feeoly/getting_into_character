@@ -30,8 +30,13 @@ export function SttToast({ sessionId }: Props) {
             type="button"
             className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
             onClick={() => {
-              if (failedTakeId) void retryTranscriptionForTake(sessionId, failedTakeId);
-              setOpen(false);
+              void (async () => {
+                if (failedTakeId) {
+                  const ok = await retryTranscriptionForTake(sessionId, failedTakeId);
+                  if (!ok) window.alert(stt.retryNoBlob);
+                }
+                setOpen(false);
+              })();
             }}
           >
             {stt.toastRetry}

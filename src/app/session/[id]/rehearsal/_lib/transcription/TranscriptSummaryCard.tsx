@@ -36,6 +36,7 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
   const [job, setJob] = useState<TranscriptionJobRow | null>(null);
   const [preview, setPreview] = useState<string>("");
   const [tick, setTick] = useState(0);
+  const [retryHint, setRetryHint] = useState<string | null>(null);
 
   useEffect(() => {
     startTranscriptionRunner();
@@ -99,10 +100,20 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
       ) : job.status === "failed" ? (
         <div className="mt-3 space-y-2">
           <div className="text-sm text-slate-600">{stt.errorInline}</div>
+          {retryHint ? (
+            <div className="text-sm text-amber-800">{retryHint}</div>
+          ) : null}
           <button
             type="button"
             className="text-sm font-semibold text-blue-600 underline-offset-2 hover:underline"
-            onClick={() => void retryTranscriptionForTake(sessionId, job.takeId)}
+            onClick={() => {
+              setRetryHint(null);
+              void (async () => {
+                const ok = await retryTranscriptionForTake(sessionId, job.takeId);
+                if (!ok) setRetryHint(stt.retryNoBlob);
+                setTick((x) => x + 1);
+              })();
+            }}
           >
             {stt.inlineRetry}
           </button>
