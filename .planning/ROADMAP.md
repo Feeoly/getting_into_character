@@ -65,7 +65,11 @@ Plans:
   3. 建议输出至少包含：可执行改进点 + 示例句式/表达范例，并能引用转写片段/停顿事件作为依据
   4. 用户可一键删除单次会话的全部数据（录制/转写/事件/建议），删除后在历史列表与复盘页均不可再访问
   5. 用户可导出本次答题文本为 txt 或 markdown，用于外部复盘
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 04-01-PLAN.md — Dexie pause `takeId` +录制起始 takeId + `listPauseEventsForTake`
+- [ ] 04-02-PLAN.md — `/review/[takeId]` 复盘页（转写/停顿/媒体 seek）+ 导航入口
+- [ ] 04-03-PLAN.md — 导出/级联删除 + 百炼 Chat API + ReviewChat（同意门闸）
 **UI hint**: yes
 
 ### Phase 5: 角色卡差异化 + 证据锚定建议
@@ -86,6 +90,6 @@ Plans:
 | 1. 信任基线与会话骨架 | 0/2 | Not started | - |
 | 2. 排练页录制与停顿事件 MVP | 0/0 | Not started | - |
 | 3. 本地转写管线（可插拔引擎） | 3/3 | Complete | 2026-04-11 |
-| 4. 复盘闭环 + 导出/删除 | 0/0 | Not started | - |
+| 4. 复盘闭环 + 导出/删除 | 0/3 | Not started | - |
 | 5. 角色卡差异化 + 证据锚定建议 | 0/0 | Not started | - |
 
