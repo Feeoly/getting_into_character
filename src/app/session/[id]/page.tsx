@@ -69,17 +69,17 @@ export default function SessionDetailPage({
 
   return (
     <main className="px-6 py-8 md:px-12 md:py-12">
-      <div className="mx-auto max-w-3xl">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="mx-auto max-w-5xl">
+        <div className="flex flex-wrap items-center gap-3">
           <BackToHomeLink />
+          {session ? <SessionActions session={session} onUpdated={setSession} /> : null}
         </div>
-        <h1 className="mt-3 text-[20px] font-semibold leading-[1.2] text-slate-900">
-          会话详情（Phase 1 壳）
-        </h1>
+        <p className="mt-2 text-xs text-slate-500">内容默认保存在本地，不会上传。</p>
+        <h1 className="mt-3 text-[20px] font-semibold leading-[1.2] text-slate-900">会话详情</h1>
 
-        <div className="mt-6 space-y-4">
+        <div className="mt-6 space-y-4 lg:grid lg:grid-cols-12 lg:gap-4 lg:space-y-0">
           {notFound ? (
-            <div className="rounded-lg border border-slate-200 bg-white px-6 py-8">
+            <div className="rounded-lg border border-slate-200 bg-white px-6 py-8 lg:col-span-12">
               <div className="text-sm font-semibold text-slate-900">会话不存在</div>
               <div className="mt-2 text-sm text-slate-600">
                 可能已被清理，或链接有误。
@@ -87,42 +87,52 @@ export default function SessionDetailPage({
             </div>
           ) : session ? (
             <>
-              <SessionMeta session={session} />
-              <RoleCardSection sessionId={session.id} session={session} onSaved={setSession} />
-              <TranscriptSummaryCard sessionId={session.id} />
-              <SessionActions session={session} onUpdated={setSession} />
-              <div className="rounded-lg border border-slate-200 bg-white px-6 py-5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold text-slate-900">排练页</div>
-                    <div className="mt-1 text-sm text-slate-600">
-                      场景背景、录制与停顿提示都在这里进行。
+              <div className="lg:col-span-12">
+                <SessionMeta session={session} />
+              </div>
+
+              <div className="space-y-4 lg:col-span-7 lg:space-y-0">
+                <RoleCardSection sessionId={session.id} session={session} onSaved={setSession} />
+              </div>
+
+              <div className="lg:col-span-5">
+                <TranscriptSummaryCard sessionId={session.id} />
+              </div>
+
+              <div className="space-y-4 lg:col-span-12">
+                <div className="rounded-lg border border-slate-200 bg-white px-6 py-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold text-slate-900">排练页</div>
+                      <div className="mt-1 text-sm text-slate-600">
+                        场景背景、录制与停顿提示都在这里进行。
+                      </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={onEnterRehearsal}
+                      className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600"
+                    >
+                      进入排练
+                    </button>
                   </div>
+                </div>
+
+                <div className="rounded-lg border border-red-200 bg-red-50/60 px-6 py-5">
+                  <div className="text-sm font-semibold text-red-900">{review.dangerZone}</div>
+                  <p className="mt-2 text-sm text-red-900/90">{review.deleteSession}</p>
                   <button
                     type="button"
-                    onClick={onEnterRehearsal}
-                    className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600"
+                    onClick={onDeleteSession}
+                    className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-400 bg-white px-4 text-sm font-semibold text-red-800 shadow-sm hover:bg-red-100"
                   >
-                    进入排练
+                    {review.deleteSession}
                   </button>
                 </div>
               </div>
-
-              <div className="rounded-lg border border-red-200 bg-red-50/60 px-6 py-5">
-                <div className="text-sm font-semibold text-red-900">{review.dangerZone}</div>
-                <p className="mt-2 text-sm text-red-900/90">{review.deleteSession}</p>
-                <button
-                  type="button"
-                  onClick={onDeleteSession}
-                  className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-400 bg-white px-4 text-sm font-semibold text-red-800 shadow-sm hover:bg-red-100"
-                >
-                  {review.deleteSession}
-                </button>
-              </div>
             </>
           ) : (
-            <div className="text-sm text-slate-600">加载中…</div>
+            <div className="text-sm text-slate-600 lg:col-span-12">加载中…</div>
           )}
         </div>
       </div>

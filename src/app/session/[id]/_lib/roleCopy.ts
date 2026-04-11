@@ -10,7 +10,7 @@ export const role = {
   triggerLabel: "触发物",
   triggerPlaceholder: "例如：一支笔、水杯",
   save: "保存并生成角色卡",
-  savedHint: "已保存。可进入朗读模式大声读一遍。",
+  savedHint: "已生成角色卡。下一步：点击下方「进入朗读模式」朗读一遍，再回本页进入排练。",
   goRead: "进入朗读模式",
   readAloudDone: "已完成朗读，可进入排练。",
   notSaved: "请先填写触发物与角色状态，并保存。",
