@@ -61,6 +61,18 @@ export class AppDB extends Dexie {
       transcriptSegments:
         "id, jobId, sessionId, takeId, start_ms, [sessionId+start_ms]",
     });
+
+    this.version(6).stores({
+      sessions: "id, createdAt, status, scene",
+      rehearsalSettings: "sessionId, updatedAt",
+      uploadedBackgrounds: "id, createdAt",
+      pauseEvents:
+        "id, sessionId, takeId, start_ms, createdAt, [sessionId+takeId]",
+      transcriptionJobs:
+        "id, sessionId, takeId, status, createdAt, [sessionId+createdAt]",
+      transcriptSegments:
+        "id, jobId, sessionId, takeId, start_ms, [sessionId+start_ms]",
+    });
   }
 }
 

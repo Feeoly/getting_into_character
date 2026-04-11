@@ -23,6 +23,7 @@ import {
   startTranscriptionRunner,
   subscribeTranscriptionModelLoading,
 } from "./_lib/transcription/transcriptionRunner";
+import { ROLE_MOOD_LABELS, role as roleCopy } from "../_lib/roleCopy";
 import { stt } from "./_lib/transcription/sttCopy";
 import { createPauseDetector } from "./_lib/pauseDetector";
 import { addPauseEvent } from "./_lib/rehearsalRepo";
@@ -298,6 +299,16 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
             <div className="mt-1 max-w-md text-sm text-white/85 drop-shadow-sm">
               内容默认保存在本地，不会上传。背景铺满全屏，预览在底部中间。
             </div>
+            {session?.roleTrigger ? (
+              <div className="mt-2 max-w-lg rounded-lg border border-white/25 bg-black/35 px-3 py-2 text-xs text-white/90 shadow-sm backdrop-blur-md">
+                <span className="font-semibold">{roleCopy.rehearsalBanner}：</span>
+                {session.roleMoodPreset ? ROLE_MOOD_LABELS[session.roleMoodPreset] : null}
+                {session.roleMoodCustom
+                  ? `${session.roleMoodPreset ? " · " : ""}${session.roleMoodCustom}`
+                  : null}
+                <span className="text-white/85"> · 触发物：{session.roleTrigger}</span>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex shrink-0 flex-wrap justify-end gap-2">

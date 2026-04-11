@@ -8,6 +8,8 @@ import type { Session } from "../../_lib/sessionTypes";
 import { PrimaryButton } from "../../_ui/PrimaryButton";
 import { SessionActions } from "../../_ui/SessionActions";
 import { SessionMeta } from "../../_ui/SessionMeta";
+import { role } from "./_lib/roleCopy";
+import { RoleCardSection } from "./_ui/RoleCardSection";
 import { TranscriptSummaryCard } from "./rehearsal/_lib/transcription/TranscriptSummaryCard";
 import { review } from "./rehearsal/_lib/transcription/sttCopy";
 
@@ -32,6 +34,19 @@ export default function SessionDetailPage({
       window.alert(review.deleteSessionDone);
       router.push("/");
     })();
+  }
+
+  function onEnterRehearsal() {
+    if (!session) return;
+    if (!session.roleCardText) {
+      window.alert(role.rehearsalNoCard);
+      document.getElementById("role-card-section")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    if (session.roleCardText && !session.roleReadAloudCompletedAt) {
+      if (!window.confirm(role.rehearsalSoftBlock)) return;
+    }
+    router.push(`/session/${session.id}/rehearsal`);
   }
 
   useEffect(() => {
@@ -70,6 +85,7 @@ export default function SessionDetailPage({
           ) : session ? (
             <>
               <SessionMeta session={session} />
+              <RoleCardSection sessionId={session.id} session={session} onSaved={setSession} />
               <TranscriptSummaryCard sessionId={session.id} />
               <SessionActions session={session} onUpdated={setSession} />
               <div className="rounded-lg border border-slate-200 bg-white px-6 py-5">
@@ -80,9 +96,13 @@ export default function SessionDetailPage({
                       场景背景、录制与停顿提示都在这里进行。
                     </div>
                   </div>
-                  <PrimaryButton href={`/session/${session.id}/rehearsal`}>
+                  <button
+                    type="button"
+                    onClick={onEnterRehearsal}
+                    className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600"
+                  >
                     进入排练
-                  </PrimaryButton>
+                  </button>
                 </div>
               </div>
 
@@ -110,4 +130,3 @@ export default function SessionDetailPage({
     </main>
   );
 }
-

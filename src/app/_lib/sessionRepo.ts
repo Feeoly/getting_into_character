@@ -1,3 +1,4 @@
+import { buildRoleCardText } from "../session/[id]/_lib/buildRoleCardText";
 import { db } from "./db";
 import {
   SESSION_SCHEMA,
@@ -6,6 +7,7 @@ import {
   type SessionRepoError,
   type SessionScene,
   type SessionStatus,
+  type SessionRoleMoodPreset,
 } from "./sessionTypes";
 
 export async function listSessions(): Promise<Session[]> {
@@ -86,6 +88,94 @@ export async function getSessionById(id: string): Promise<Session | null> {
     return parsed.success ? parsed.data : null;
   } catch {
     return null;
+  }
+}
+
+export type SaveRoleCardInput = {
+  moodPreset?: SessionRoleMoodPreset;
+  moodCustom?: string;
+  trigger: string;
+};
+
+export async function saveSessionRoleCard(
+  sessionId: string,
+  input: SaveRoleCardInput,
+): Promise<RepoResult<Session>> {
+  const trigger = input.trigger.trim();
+  const custom = input.moodCustom?.trim() ?? "";
+  const hasMood = Boolean(input.moodPreset) || custom.length > 0;
+  if (!hasMood) {
+    return {
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "请选择角色气质，或填写补充说明。",
+      },
+    };
+  }
+  if (!trigger) {
+    return {
+      ok: false,
+      error: { code: "validation_error", message: "请填写触发物。" },
+    };
+  }
+
+  try {
+    const current = await db.sessions.get(sessionId);
+    if (!current) {
+      return { ok: false, error: { code: "not_found", message: "会话不存在。" } };
+    }
+    const parsed = SESSION_SCHEMA.safeParse(current);
+    if (!parsed.success) return { ok: false, error: toStorageError() };
+
+    const now = Date.now();
+    const roleCardText = buildRoleCardText({
+      moodPreset: input.moodPreset,
+      moodCustom: custom || undefined,
+      trigger,
+    });
+
+    const next: Session = {
+      ...parsed.data,
+      roleMoodPreset: input.moodPreset,
+      roleMoodCustom: custom || undefined,
+      roleTrigger: trigger,
+      roleCardText,
+      roleCardUpdatedAt: now,
+      roleReadAloudCompletedAt: undefined,
+    };
+
+    const out = SESSION_SCHEMA.safeParse(next);
+    if (!out.success) return { ok: false, error: toStorageError() };
+
+    await db.sessions.put(out.data);
+    return { ok: true, value: out.data };
+  } catch {
+    return { ok: false, error: toStorageError() };
+  }
+}
+
+export async function markRoleReadAloudComplete(sessionId: string): Promise<RepoResult<Session>> {
+  try {
+    const current = await db.sessions.get(sessionId);
+    if (!current) {
+      return { ok: false, error: { code: "not_found", message: "会话不存在。" } };
+    }
+    const parsed = SESSION_SCHEMA.safeParse(current);
+    if (!parsed.success) return { ok: false, error: toStorageError() };
+
+    const now = Date.now();
+    const next: Session = {
+      ...parsed.data,
+      roleReadAloudCompletedAt: now,
+    };
+    const out = SESSION_SCHEMA.safeParse(next);
+    if (!out.success) return { ok: false, error: toStorageError() };
+
+    await db.sessions.put(out.data);
+    return { ok: true, value: out.data };
+  } catch {
+    return { ok: false, error: toStorageError() };
   }
 }
 

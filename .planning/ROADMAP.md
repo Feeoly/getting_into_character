@@ -4,7 +4,7 @@
 - [ ] **Phase 2: 排练页录制与停顿事件 MVP** - 背景 + 录制回放 + 停顿提醒/记录 + 基础设置
 - [x] **Phase 3: 本地转写管线（可插拔引擎）** - 录后转写为文本并带时间信息，默认不上传
 - [x] **Phase 4: 复盘闭环 + 导出/删除** - 复盘页可基于文本/停顿快速复盘，支持导出与一键清理
-- [ ] **Phase 5: 角色卡差异化 + 证据锚定建议** - 角色进入（生成+朗读）；证据锚定以可执行角色卡为主（复盘 AI 见 Phase 4）
+- [x] **Phase 5: 角色卡差异化 + 证据锚定建议** - 角色进入（生成+朗读）；证据锚定以可执行角色卡为主（复盘 AI 见 Phase 4）
 
 ## Phase Details
 
@@ -82,8 +82,8 @@ Plans:
   3. 系统提供朗读模式，引导用户大声读出角色卡，并在结束朗读后返回练习流程继续使用该角色
 **Plans**: 2 plans
 Plans:
-- [ ] 05-01-PLAN.md — Dexie v6 + Session 角色字段 + buildRoleCardText + sessionRepo
-- [ ] 05-02-PLAN.md — 详情页 RoleCardSection + /role/read 朗读 + 排练软阻塞
+- [x] 05-01-PLAN.md — Dexie v6 + Session 角色字段 + buildRoleCardText + sessionRepo
+- [x] 05-02-PLAN.md — 详情页 RoleCardSection + /role/read 朗读 + 排练软阻塞
 **UI hint**: yes
 
 ## Progress
@@ -94,5 +94,5 @@ Plans:
 | 2. 排练页录制与停顿事件 MVP | 0/0 | Not started | - |
 | 3. 本地转写管线（可插拔引擎） | 3/3 | Complete | 2026-04-11 |
 | 4. 复盘闭环 + 导出/删除 | 3/3 | Complete | 2026-04-11 |
-| 5. 角色卡差异化 + 证据锚定建议 | 0/2 | Not started | - |
+| 5. 角色卡差异化 + 证据锚定建议 | 2/2 | Complete | 2026-04-11 |
 
