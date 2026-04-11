@@ -21,6 +21,14 @@ type WorkerToMain =
 
 declare const self: DedicatedWorkerGlobalScope;
 
+// transformers 的 web 入口在模块求值时会读 window；Dedicated Worker 无 window
+void (function polyfillWindowForHfInWorker() {
+  const gt = globalThis as unknown as Record<string, unknown>;
+  if (typeof gt.window === "undefined") {
+    gt.window = globalThis;
+  }
+})();
+
 const DBG = "[transcription:worker]";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
