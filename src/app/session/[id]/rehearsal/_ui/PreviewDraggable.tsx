@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useLayoutEffect, useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
   liveStream?: MediaStream | null;
@@ -15,15 +15,27 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 
+function disposeStream(s: MediaStream | null) {
+  if (!s) return;
+  for (const t of s.getTracks()) {
+    try {
+      t.stop();
+    } catch {
+      // ignore
+    }
+  }
+}
+
 export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  /** 仅用于 <video> 展示，与 MediaRecorder 使用的原流分离，避免 Chrome 等黑屏 */
+  const previewCloneRef = useRef<MediaStream | null>(null);
+
   const [pos, setPos] = useState<Pos | null>(null);
   const [dragging, setDragging] = useState(false);
-  /** 仅用户手动收起 */
   const [collapsed, setCollapsed] = useState(false);
 
-  /** 有流就挂 <video>：避免仅靠 getVideoTracks 时机导致永远不挂载 */
   const showPip = useMemo(() => {
     if (mode === "live") return Boolean(liveStream);
     return Boolean(playbackUrl);
@@ -34,15 +46,43 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     [liveStream],
   );
 
-  useEffect(() => {
+  // 首帧即有位移，避免首屏 Portal 为 null
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    setPos((p) => {
+      if (p) return p;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const defaultW = collapsed ? 72 : 280;
+      const defaultH = collapsed ? 72 : 168;
+      return {
+        x: Math.round((w - defaultW) / 2),
+        y: Math.round(h - defaultH - 24),
+      };
+    });
+  }, [collapsed]);
+
+  useLayoutEffect(() => {
     const v = videoRef.current;
+    disposeStream(previewCloneRef.current);
+    previewCloneRef.current = null;
+
     if (!v) return;
 
     if (mode === "live" && liveStream) {
-      v.srcObject = liveStream;
+      let display: MediaStream = liveStream;
+      try {
+        display = liveStream.clone();
+        previewCloneRef.current = display;
+      } catch {
+        previewCloneRef.current = null;
+      }
+      v.srcObject = display;
       void v.play().catch(() => {});
       return () => {
         v.srcObject = null;
+        disposeStream(previewCloneRef.current);
+        previewCloneRef.current = null;
       };
     }
 
@@ -57,7 +97,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
 
     v.srcObject = null;
     v.removeAttribute("src");
-  }, [liveStream, mode, playbackUrl, showPip]);
+  }, [liveStream, mode, playbackUrl]);
 
   useEffect(() => {
     if (!pos) return;
@@ -65,19 +105,6 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [pos]);
-
-  useEffect(() => {
-    if (pos) return;
-    if (typeof window === "undefined") return;
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const defaultW = collapsed ? 72 : 280;
-    const defaultH = collapsed ? 72 : 168;
-    setPos({
-      x: Math.round((w - defaultW) / 2),
-      y: Math.round(h - defaultH - 24),
-    });
-  }, [pos, collapsed]);
 
   function handlePointerDown(e: React.PointerEvent) {
     if (!pos) return;
@@ -125,7 +152,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
   const pip = (
     <div
       ref={rootRef}
-      className={`fixed z-[45] select-none ${
+      className={`fixed z-[48] select-none ring-2 ring-white/40 ${
         dragging ? "cursor-grabbing" : "cursor-grab"
       }`}
       style={{
@@ -136,7 +163,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
       onPointerDown={handlePointerDown}
     >
       <div
-        className={`relative h-full w-full overflow-hidden border border-white/30 bg-black/60 shadow-xl backdrop-blur-md ${
+        className={`relative h-full w-full overflow-hidden border border-white/30 bg-black/70 shadow-xl backdrop-blur-md ${
           collapsed ? "rounded-full" : "rounded-xl"
         }`}
       >
@@ -158,7 +185,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
         ) : (
           <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs font-semibold text-white/80">
             {mode === "live"
-              ? "暂无画面（设置里开启摄像头或录屏）"
+              ? "开始录制后显示预览"
               : "无视频回放"}
           </div>
         )}

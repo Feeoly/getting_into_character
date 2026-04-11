@@ -162,7 +162,7 @@ export function RecorderPanel({
             type="button"
             disabled={!canStart}
             onClick={() => void onStart()}
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-white disabled:pointer-events-none disabled:opacity-35"
           >
             开始录制
           </button>
