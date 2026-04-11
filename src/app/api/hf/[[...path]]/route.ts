@@ -2,16 +2,17 @@ import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 
+/** 默认走 hf-mirror.com（国内常用）；可用 HF_HUB_UPSTREAM 改为 huggingface.co 等 */
+const DEFAULT_HF_HUB_UPSTREAM = "https://hf-mirror.com";
+
 /**
- * Hub 根地址。国内等网络无法直连 huggingface.co 时，在 .env.local 设置例如：
- * HF_HUB_UPSTREAM=https://hf-mirror.com
- * （与 hf.co 相同路径规则，无需改 Worker）
+ * Hub 根地址（与 huggingface.co 同路径规则）。
  */
 function hubOrigin(): string {
   const raw =
     process.env.HF_HUB_UPSTREAM ??
     process.env.HUGGINGFACE_HUB_ENDPOINT ??
-    "https://huggingface.co";
+    DEFAULT_HF_HUB_UPSTREAM;
   return raw.replace(/\/+$/, "");
 }
 
@@ -103,11 +104,9 @@ export async function GET(
       hints.push(
         "当前表示运行 next dev 的这台机器连不上 target 的主机（如 Connect Timeout）。与浏览器地址栏是 localhost 无关；请检查网络/VPN/防火墙。Node 通常不自动使用系统代理。",
       );
-      if (!process.env.HF_HUB_UPSTREAM && !process.env.HUGGINGFACE_HUB_ENDPOINT) {
-        hints.push(
-          "若 huggingface.co 不可达，可在 .env.local 设置 HF_HUB_UPSTREAM=https://hf-mirror.com 后重启 dev。",
-        );
-      }
+      hints.push(
+        `当前默认上游为 ${DEFAULT_HF_HUB_UPSTREAM}；若失败可设置环境变量 HF_HUB_UPSTREAM（例如海外用 https://huggingface.co）后重启进程。`,
+      );
     }
     return new Response(
       JSON.stringify({

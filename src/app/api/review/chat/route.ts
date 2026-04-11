@@ -22,7 +22,10 @@ const bodySchema = z.object({
 
 const MAX_BODY_CHARS = 32_000;
 
-/** 百炼 OpenAI 兼容；可用 env 覆盖，默认 MiniMax-M2.5 */
+/** 百炼 OpenAI 兼容 Chat根路径；可用 BAILIAN_BASE_URL 覆盖 */
+const DEFAULT_BAILIAN_BASE_URL = "https://coding.dashscope.aliyuncs.com/v1";
+
+/** 可用 BAILIAN_CHAT_MODEL 覆盖，默认 MiniMax-M2.5 */
 const DEFAULT_CHAT_MODEL = "MiniMax-M2.5";
 
 function countBodyChars(b: z.infer<typeof bodySchema>): number {
@@ -39,17 +42,18 @@ function countBodyChars(b: z.infer<typeof bodySchema>): number {
 
 export async function POST(req: Request) {
   const key = process.env.BAILIAN_API_KEY;
-  const baseRaw = process.env.BAILIAN_BASE_URL;
-  if (!key?.trim() || !baseRaw?.trim()) {
+  if (!key?.trim()) {
     return NextResponse.json(
       {
         error:
-          "未配置 BAILIAN_API_KEY / BAILIAN_BASE_URL。请在部署环境或 .env.local 中设置（OpenAI 兼容 Chat 根 URL）。",
+          "未配置 BAILIAN_API_KEY。请在部署环境变量（或本机 export）中设置百炼 API Key。",
       },
       { status: 503 },
     );
   }
 
+  const baseRaw =
+    process.env.BAILIAN_BASE_URL?.trim() || DEFAULT_BAILIAN_BASE_URL;
   const base = baseRaw.replace(/\/+$/, "");
   let json: unknown;
   try {
