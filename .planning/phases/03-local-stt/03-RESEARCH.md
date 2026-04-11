@@ -323,15 +323,14 @@ const pipe = await pipeline('sentiment-analysis', 'Xenova/distilbert-base-uncase
 | A2 | 选定 Whisper 模型在中英混合面试场景下「可用」准确率 | WASM 选项 | 需更换更大模型或第二引擎（sherpa） |
 | A3 | `return_timestamps` 在 v4 pipeline 上稳定返回可分片结构 | STT-02 | 需改为固定窗口切片 + 无字时间插值 |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **v1 是否只转写麦克风音频而忽略屏幕共享视频轨中的系统声？**  
    - **已知：** 当前 `recording.ts` 将显示轨与麦克轨合并为单流 **[VERIFIED: `recording.ts`]**。  
-   - **未决：** 产品是否要求「仅人声」。  
-   - **建议：** planner 在 PLAN 写死一条默认策略。
+   - **RESOLVED:** Phase 3 **转写对象 = 用户录制产出的单一混合 Blob**（与 `StopRecordingResult` 一致）；不单独抽取「仅麦克风轨」。见 `03-02-PLAN.md` context。
 
 2. **模型分发：** 使用 Hugging Face CDN 还是自托管静态资源以满足「断网首次安装」？  
-   - **建议：** 规划 **可选** 首次联网下载 + 之后纯本地；与 STT-03 文案一致。
+   - **RESOLVED:** **默认** 使用 Hugging Face **静态权重** CDN（HTTPS GET，非 STT API）；首次需联网缓存，之后可走本地 Cache。受限网络可通过 `env.localModelPath` / 自托管镜像（`03-02-PLAN.md` `user_setup`）。与 STT-03「默认不上传」一致。
 
 ## Environment Availability
 
