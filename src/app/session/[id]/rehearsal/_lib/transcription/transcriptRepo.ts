@@ -253,3 +253,22 @@ export async function getLatestJobForTake(
     return null;
   }
 }
+
+/** 删除该轮转写 job/segment；停顿行由 rehearsalRepo 或此处一并处理 */
+export async function deleteTakeData(sessionId: string, takeId: string): Promise<void> {
+  await db.transaction("rw", db.transcriptionJobs, db.transcriptSegments, db.pauseEvents, async () => {
+    const jobs = await db.transcriptionJobs
+      .where("takeId")
+      .equals(takeId)
+      .and((j) => j.sessionId === sessionId)
+      .toArray();
+    for (const j of jobs) {
+      await db.transcriptSegments.where("jobId").equals(j.id).delete();
+      await db.transcriptionJobs.delete(j.id);
+    }
+    await db.pauseEvents
+      .where("[sessionId+takeId]")
+      .equals([sessionId, takeId])
+      .delete();
+  });
+}

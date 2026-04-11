@@ -124,9 +124,16 @@ export async function getUploadedBackground(id: string): Promise<UploadedBackgro
   }
 }
 
-export async function addPauseEvent(event: Omit<PauseEvent, "id" | "createdAt">): Promise<void> {
+export type AddPauseEventInput = Omit<PauseEvent, "id" | "createdAt" | "takeId"> & {
+  takeId: string;
+};
+
+export async function addPauseEvent(event: AddPauseEventInput): Promise<void> {
   const createdAt = Date.now();
-  const id = `${event.sessionId}:${Math.max(0, Math.round(event.start_ms))}`;
+  const id =
+    typeof globalThis.crypto?.randomUUID === "function"
+      ? globalThis.crypto.randomUUID()
+      : `${event.sessionId}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
   const row: PauseEvent = {
     ...event,
@@ -145,6 +152,23 @@ export async function addPauseEvent(event: Omit<PauseEvent, "id" | "createdAt">)
 
 export async function listPauseEvents(sessionId: string): Promise<PauseEvent[]> {
   const rows = await db.pauseEvents.where("sessionId").equals(sessionId).sortBy("start_ms");
+  const events: PauseEvent[] = [];
+  for (const row of rows) {
+    const parsed = PAUSE_EVENT_SCHEMA.safeParse(row);
+    if (parsed.success) events.push(parsed.data);
+  }
+  return events;
+}
+
+/** 仅含绑定 takeId 的停顿；无 takeId 的历史行不会出现 */
+export async function listPauseEventsForTake(
+  sessionId: string,
+  takeId: string,
+): Promise<PauseEvent[]> {
+  const rows = await db.pauseEvents
+    .where("[sessionId+takeId]")
+    .equals([sessionId, takeId])
+    .sortBy("start_ms");
   const events: PauseEvent[] = [];
   for (const row of rows) {
     const parsed = PAUSE_EVENT_SCHEMA.safeParse(row);

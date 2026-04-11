@@ -32,3 +32,37 @@ export function previewSnippet(text: string, max = 140): string {
   if (t.length <= max) return t;
   return `${t.slice(0, max)}…`;
 }
+
+/** Phase 4 复盘页文案（04-UI-SPEC） */
+export const review = {
+  pageTitle: "复盘",
+  subtitleHint: "以下为本地数据；导出与删除仅影响本机浏览器。",
+  openReview: "进入复盘",
+  segmentJump: "跳转播放",
+  pauseSectionTitle: "停顿记录",
+  pauseRow: "{start}–{end} · 约 {duration} 秒",
+  noPauses: "本轮未记录长时间停顿",
+  exportMd: "导出 Markdown",
+  exportTxt: "导出 TXT",
+  deleteTake: "删除本轮",
+  deleteSession: "删除整场会话",
+  dangerZone: "危险操作",
+  backToSession: "返回会话",
+  transcriptSection: "转写片段",
+  confirmDeleteTake: "将永久删除本轮的录音转写、停顿记录等本地数据，且不可恢复。确定继续？",
+  confirmDeleteSession: "将永久删除本场会话的全部本地数据（含所有轮次、转写、停顿等），且不可恢复。确定继续？",
+  deleteTakeDone: "已删除本轮数据。",
+  deleteSessionDone: "已删除会话。",
+} as const;
+
+export const ai = {
+  sectionTitle: "AI 复盘",
+  disclosure: "仅在你点击发送后上传文本上下文；录音不离开本机。",
+  inputPlaceholder: "输入题目、答题要点或追问…",
+  send: "发送",
+  loading: "正在生成…",
+  error: "请求失败，请检查网络或稍后重试。",
+  consentRequired: "请先阅读并同意上方说明后再使用 AI。",
+  consentLabel: "我已阅读并同意：仅将上方文本摘要发送至模型服务，不上传录音文件。",
+  configError: "未配置 AI：请在服务端环境变量中设置 BAILIAN_BASE_URL 与 BAILIAN_API_KEY。",
+} as const;

@@ -11,6 +11,8 @@ export type StartRecordingResult = {
   stream: MediaStream;
   kind: RecordingKind;
   mimeType?: string;
+  /** 与本轮 StopRecordingResult.takeId 相同（录制开始即确定） */
+  takeId: string;
 };
 
 export type StopRecordingResult = {
@@ -33,6 +35,12 @@ export type RecordingError = {
   cause?: unknown;
 };
 
+function newTakeId(): string {
+  return typeof globalThis.crypto?.randomUUID === "function"
+    ? globalThis.crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 let current:
   | null
   | {
@@ -41,6 +49,7 @@ let current:
       chunks: BlobPart[];
       kind: RecordingKind;
       url: string | null;
+      takeId: string;
     } = null;
 
 function toRecordingError(err: unknown): RecordingError {
@@ -188,12 +197,13 @@ export async function startRecording(
       if (e.data && e.data.size > 0) chunks.push(e.data);
     };
 
-    current = { stream, recorder, chunks, kind, url: null };
+    const takeId = newTakeId();
+    current = { stream, recorder, chunks, kind, url: null, takeId };
 
     const timeslice = input.timesliceMs ?? 1000;
     recorder.start(timeslice);
 
-    return { stream, kind, mimeType: recorder.mimeType || mimeType };
+    return { stream, kind, mimeType: recorder.mimeType || mimeType, takeId };
   } catch (e) {
     throw toRecordingError(e);
   }
@@ -207,7 +217,7 @@ export async function stopRecording(): Promise<StopRecordingResult> {
     } satisfies RecordingError;
   }
 
-  const { recorder, stream, chunks, kind } = current;
+  const { recorder, stream, chunks, kind, takeId } = current;
   safeRevoke(current.url);
 
   try {
@@ -231,10 +241,6 @@ export async function stopRecording(): Promise<StopRecordingResult> {
     const mimeType = recorder.mimeType || "application/octet-stream";
     const blob = new Blob(chunks, { type: mimeType });
     const url = URL.createObjectURL(blob);
-    const takeId =
-      typeof globalThis.crypto?.randomUUID === "function"
-        ? globalThis.crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const result: StopRecordingResult = { blob, url, mimeType, kind, takeId };
 
     safeStopTracks(stream);

@@ -1,13 +1,15 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
-import { getSessionById } from "../../_lib/sessionRepo";
+import { deleteSessionCascade, getSessionById } from "../../_lib/sessionRepo";
 import type { Session } from "../../_lib/sessionTypes";
 import { PrimaryButton } from "../../_ui/PrimaryButton";
 import { SessionActions } from "../../_ui/SessionActions";
 import { SessionMeta } from "../../_ui/SessionMeta";
 import { TranscriptSummaryCard } from "./rehearsal/_lib/transcription/TranscriptSummaryCard";
+import { review } from "./rehearsal/_lib/transcription/sttCopy";
 
 export default function SessionDetailPage({
   params,
@@ -15,8 +17,22 @@ export default function SessionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [notFound, setNotFound] = useState(false);
+
+  function onDeleteSession() {
+    if (!window.confirm(review.confirmDeleteSession)) return;
+    void (async () => {
+      const r = await deleteSessionCascade(id);
+      if (!r.ok) {
+        window.alert(r.error.message);
+        return;
+      }
+      window.alert(review.deleteSessionDone);
+      router.push("/");
+    })();
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -68,6 +84,18 @@ export default function SessionDetailPage({
                     进入排练
                   </PrimaryButton>
                 </div>
+              </div>
+
+              <div className="rounded-lg border border-red-200 bg-red-50/60 px-6 py-5">
+                <div className="text-sm font-semibold text-red-900">{review.dangerZone}</div>
+                <p className="mt-2 text-sm text-red-900/90">{review.deleteSession}</p>
+                <button
+                  type="button"
+                  onClick={onDeleteSession}
+                  className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-400 bg-white px-4 text-sm font-semibold text-red-800 shadow-sm hover:bg-red-100"
+                >
+                  {review.deleteSession}
+                </button>
               </div>
             </>
           ) : (

@@ -89,6 +89,36 @@ export async function getSessionById(id: string): Promise<Session | null> {
   }
 }
 
+export async function deleteSessionCascade(sessionId: string): Promise<RepoResult<void>> {
+  try {
+    await db.transaction(
+      "rw",
+      [
+        db.sessions,
+        db.rehearsalSettings,
+        db.uploadedBackgrounds,
+        db.pauseEvents,
+        db.transcriptionJobs,
+        db.transcriptSegments,
+      ],
+      async () => {
+        const settings = await db.rehearsalSettings.get(sessionId);
+        if (settings?.uploadedBackgroundId) {
+          await db.uploadedBackgrounds.delete(settings.uploadedBackgroundId);
+        }
+        await db.transcriptSegments.where("sessionId").equals(sessionId).delete();
+        await db.transcriptionJobs.where("sessionId").equals(sessionId).delete();
+        await db.pauseEvents.where("sessionId").equals(sessionId).delete();
+        await db.rehearsalSettings.delete(sessionId);
+        await db.sessions.delete(sessionId);
+      },
+    );
+    return { ok: true, value: undefined };
+  } catch {
+    return { ok: false, error: toStorageError() };
+  }
+}
+
 export async function updateSessionStatus(
   id: string,
   nextStatus: SessionStatus,

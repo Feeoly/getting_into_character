@@ -50,6 +50,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
   const toastTimerRef = useRef<number | null>(null);
   const currentPausePromptShownRef = useRef(false);
   const currentPauseStartEpochRef = useRef<number | null>(null);
+  const currentRecordingTakeIdRef = useRef<string | null>(null);
 
   const [uploadedBgUrl, setUploadedBgUrl] = useState<string | null>(null);
   const uploadedBgUrlRef = useRef<string | null>(null);
@@ -140,9 +141,15 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
         const start_ms = Math.max(0, pauseStartEpochMs - recordingEpochStartMs);
         const duration_ms = Math.max(0, pauseEndEpochMs - pauseStartEpochMs);
 
+        const takeId = currentRecordingTakeIdRef.current;
         try {
+          if (!takeId) {
+            console.warn("[pause] skip addPauseEvent: no takeId");
+            return;
+          }
           await addPauseEvent({
             sessionId: id,
+            takeId,
             start_ms,
             duration_ms,
             threshold_ms: settings.pauseThresholdMs,
@@ -337,7 +344,10 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
                   liveStream={liveStream}
                   onLiveStreamChange={setLiveStream}
                   onPlaybackChange={setPlayback}
-                  onRecordingEpochStart={setRecordingEpochStartMs}
+                  onRecordingSessionChange={(s) => {
+                    setRecordingEpochStartMs(s?.epochMs ?? null);
+                    currentRecordingTakeIdRef.current = s?.takeId ?? null;
+                  }}
                 />
               </>
             ) : (

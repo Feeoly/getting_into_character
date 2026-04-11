@@ -3,7 +3,7 @@
 - [ ] **Phase 1: 信任基线与会话骨架** - 本地优先的数据流、权限/状态可见性、会话创建与历史列表
 - [ ] **Phase 2: 排练页录制与停顿事件 MVP** - 背景 + 录制回放 + 停顿提醒/记录 + 基础设置
 - [x] **Phase 3: 本地转写管线（可插拔引擎）** - 录后转写为文本并带时间信息，默认不上传
-- [ ] **Phase 4: 复盘闭环 + 导出/删除** - 复盘页可基于文本/停顿快速复盘，支持导出与一键清理
+- [x] **Phase 4: 复盘闭环 + 导出/删除** - 复盘页可基于文本/停顿快速复盘，支持导出与一键清理
 - [ ] **Phase 5: 角色卡差异化 + 证据锚定建议** - 角色进入（生成+朗读）与“可执行建议+例句+依据”输出契约
 
 ## Phase Details
@@ -67,9 +67,9 @@ Plans:
   5. 用户可导出本次答题文本为 txt 或 markdown，用于外部复盘
 **Plans**: 3 plans
 Plans:
-- [ ] 04-01-PLAN.md — Dexie pause `takeId` +录制起始 takeId + `listPauseEventsForTake`
-- [ ] 04-02-PLAN.md — `/review/[takeId]` 复盘页（转写/停顿/媒体 seek）+ 导航入口
-- [ ] 04-03-PLAN.md — 导出/级联删除 + 百炼 Chat API + ReviewChat（同意门闸）
+- [x] 04-01-PLAN.md — Dexie pause `takeId` +录制起始 takeId + `listPauseEventsForTake`
+- [x] 04-02-PLAN.md — `/review/[takeId]` 复盘页（转写/停顿/媒体 seek）+ 导航入口
+- [x] 04-03-PLAN.md — 导出/级联删除 + 百炼 Chat API + ReviewChat（同意门闸）
 **UI hint**: yes
 
 ### Phase 5: 角色卡差异化 + 证据锚定建议
@@ -90,6 +90,6 @@ Plans:
 | 1. 信任基线与会话骨架 | 0/2 | Not started | - |
 | 2. 排练页录制与停顿事件 MVP | 0/0 | Not started | - |
 | 3. 本地转写管线（可插拔引擎） | 3/3 | Complete | 2026-04-11 |
-| 4. 复盘闭环 + 导出/删除 | 0/3 | Not started | - |
+| 4. 复盘闭环 + 导出/删除 | 3/3 | Complete | 2026-04-11 |
 | 5. 角色卡差异化 + 证据锚定建议 | 0/0 | Not started | - |
 

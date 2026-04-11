@@ -8,7 +8,7 @@ import { getSessionById } from "../../../../_lib/sessionRepo";
 import type { Session } from "../../../../_lib/sessionTypes";
 import { listSegmentsForTake } from "../../rehearsal/_lib/transcription/transcriptRepo";
 import type { TranscriptSegmentRow } from "../../rehearsal/_lib/transcription/transcriptionTypes";
-import { stt } from "../../rehearsal/_lib/transcription/sttCopy";
+import { review, stt } from "../../rehearsal/_lib/transcription/sttCopy";
 import {
   retryTranscriptionForTake,
   startTranscriptionRunner,
@@ -137,6 +137,12 @@ export default function TranscriptPage({
             >
               {stt.retranscribe}
             </button>
+            <Link
+              href={`/session/${id}/review/${takeId}`}
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+            >
+              {review.openReview}
+            </Link>
             <Link
               href={`/session/${id}`}
               className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"

@@ -21,7 +21,8 @@ type Props = {
   liveStream: MediaStream | null;
   onLiveStreamChange: (stream: MediaStream | null) => void;
   onPlaybackChange: (playback: StopRecordingResult | null) => void;
-  onRecordingEpochStart: (epochMs: number | null) => void;
+  /** 录制中：epoch 与 takeId；结束/错误时为 null */
+  onRecordingSessionChange: (s: { epochMs: number; takeId: string } | null) => void;
 };
 
 function formatSec(sec: number): string {
@@ -41,7 +42,7 @@ export function RecorderPanel({
   liveStream,
   onLiveStreamChange,
   onPlaybackChange,
-  onRecordingEpochStart,
+  onRecordingSessionChange,
 }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -62,17 +63,17 @@ export function RecorderPanel({
     try {
       const res = await stopRecording();
       onLiveStreamChange(null);
-      onRecordingEpochStart(null);
+      onRecordingSessionChange(null);
       setPlayback(res);
       onPlaybackChange(res);
       setStatus("stopped");
     } catch (e) {
       onLiveStreamChange(null);
-      onRecordingEpochStart(null);
+      onRecordingSessionChange(null);
       setStatus("error");
       setError(toMessage(e));
     }
-  }, [onLiveStreamChange, onPlaybackChange, onRecordingEpochStart]);
+  }, [onLiveStreamChange, onPlaybackChange, onRecordingSessionChange]);
 
   const onStart = useCallback(async () => {
     setError(null);
@@ -92,19 +93,19 @@ export function RecorderPanel({
       onLiveStreamChange(res.stream);
       const now = Date.now();
       startedAtRef.current = now;
-      onRecordingEpochStart(now);
+      onRecordingSessionChange({ epochMs: now, takeId: res.takeId });
       setElapsedSec(0);
       setStatus("recording");
     } catch (e) {
       onLiveStreamChange(null);
-      onRecordingEpochStart(null);
+      onRecordingSessionChange(null);
       setStatus("error");
       setError(toMessage(e));
     }
   }, [
     onLiveStreamChange,
     onPlaybackChange,
-    onRecordingEpochStart,
+    onRecordingSessionChange,
     settings.cameraEnabled,
     settings.screenShareEnabled,
   ]);

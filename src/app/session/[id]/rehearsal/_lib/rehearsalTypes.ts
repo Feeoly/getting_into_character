@@ -63,6 +63,8 @@ export type UploadedBackgroundRow = UploadedBackground;
 export const PAUSE_EVENT_SCHEMA = z.object({
   id: z.string().min(1),
   sessionId: z.string().min(1),
+  /** Phase 4 起新事件必有；旧数据可能缺省，不参与按轮次复盘 */
+  takeId: z.string().min(1).optional(),
   start_ms: z.number().int().nonnegative(),
   duration_ms: z.number().int().nonnegative(),
   threshold_ms: z.number().int().nonnegative(),

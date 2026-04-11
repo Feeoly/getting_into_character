@@ -9,7 +9,7 @@ import {
   listSegmentsForTake,
 } from "./transcriptRepo";
 import type { TranscriptionJobRow } from "./transcriptionTypes";
-import { previewSnippet, stt } from "./sttCopy";
+import { previewSnippet, review, stt } from "./sttCopy";
 import {
   retryTranscriptionForTake,
   startTranscriptionRunner,
@@ -117,6 +117,12 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
           >
             {stt.inlineRetry}
           </button>
+          <Link
+            href={`/session/${sessionId}/review/${job.takeId}`}
+            className="mt-2 inline-flex text-sm font-semibold text-blue-600 underline-offset-2 hover:underline"
+          >
+            {review.openReview}
+          </Link>
         </div>
       ) : (
         <div className="mt-3 space-y-2">
@@ -126,12 +132,20 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
             <div className="text-sm text-slate-600">{stt.emptyHeading}</div>
           )}
           {takeIdForLink ? (
-            <Link
-              href={`/session/${sessionId}/transcript/${takeIdForLink}`}
-              className="inline-flex text-sm font-semibold text-blue-600 underline-offset-2 hover:underline"
-            >
-              {stt.viewFull}
-            </Link>
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <Link
+                href={`/session/${sessionId}/transcript/${takeIdForLink}`}
+                className="inline-flex text-sm font-semibold text-blue-600 underline-offset-2 hover:underline"
+              >
+                {stt.viewFull}
+              </Link>
+              <Link
+                href={`/session/${sessionId}/review/${takeIdForLink}`}
+                className="inline-flex text-sm font-semibold text-blue-600 underline-offset-2 hover:underline"
+              >
+                {review.openReview}
+              </Link>
+            </div>
           ) : null}
         </div>
       )}
