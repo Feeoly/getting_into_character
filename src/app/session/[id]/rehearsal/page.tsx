@@ -332,6 +332,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
                 </div>
 
                 <RecorderPanel
+                  sessionId={id}
                   settings={settings}
                   liveStream={liveStream}
                   onLiveStreamChange={setLiveStream}
