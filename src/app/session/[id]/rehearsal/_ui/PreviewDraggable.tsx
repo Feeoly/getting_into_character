@@ -15,6 +15,36 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 
+/** 用于 fixed 定位：优先 visualViewport，避免 innerHeight 大于实际可见区时把 PiP 放到视口外 */
+function viewportBox(): { w: number; h: number; ox: number; oy: number } {
+  if (typeof window === "undefined") {
+    return { w: 800, h: 600, ox: 0, oy: 0 };
+  }
+  const vv = window.visualViewport;
+  if (vv) {
+    return { w: vv.width, h: vv.height, ox: vv.offsetLeft, oy: vv.offsetTop };
+  }
+  return {
+    w: window.innerWidth,
+    h: window.innerHeight,
+    ox: 0,
+    oy: 0,
+  };
+}
+
+function clampPipPos(x: number, y: number, pipW: number, pipH: number): Pos {
+  const margin = 8;
+  const { w, h, ox, oy } = viewportBox();
+  const minX = ox + margin;
+  const minY = oy + margin;
+  const maxX = ox + w - pipW - margin;
+  const maxY = oy + h - pipH - margin;
+  return {
+    x: clamp(x, minX, Math.max(minX, maxX)),
+    y: clamp(y, minY, Math.max(minY, maxY)),
+  };
+}
+
 export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -33,19 +63,22 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     [liveStream],
   );
 
-  // 首帧即有位移，避免首屏 Portal 为 null
+  // 首帧与折叠切换：用可见视口算默认「底部居中」，并始终钳在 viewport 内
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
+    const pipW = collapsed ? 72 : 280;
+    const pipH = collapsed ? 72 : 168;
+    const { w, h, ox, oy } = viewportBox();
     setPos((p) => {
-      if (p) return p;
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const defaultW = collapsed ? 72 : 280;
-      const defaultH = collapsed ? 72 : 168;
-      return {
-        x: Math.round((w - defaultW) / 2),
-        y: Math.round(h - defaultH - 24),
-      };
+      if (!p) {
+        return clampPipPos(
+          Math.round(ox + (w - pipW) / 2),
+          Math.round(oy + h - pipH - 24),
+          pipW,
+          pipH,
+        );
+      }
+      return clampPipPos(p.x, p.y, pipW, pipH);
     });
   }, [collapsed]);
 
@@ -77,10 +110,20 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
 
   useEffect(() => {
     if (!pos) return;
-    const onResize = () => setPos((p) => (p ? { ...p } : p));
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [pos]);
+    const pipW = collapsed ? 72 : 280;
+    const pipH = collapsed ? 72 : 168;
+    function reclamp() {
+      setPos((p) => (p ? clampPipPos(p.x, p.y, pipW, pipH) : p));
+    }
+    window.addEventListener("resize", reclamp);
+    window.visualViewport?.addEventListener("resize", reclamp);
+    window.visualViewport?.addEventListener("scroll", reclamp);
+    return () => {
+      window.removeEventListener("resize", reclamp);
+      window.visualViewport?.removeEventListener("resize", reclamp);
+      window.visualViewport?.removeEventListener("scroll", reclamp);
+    };
+  }, [pos, collapsed]);
 
   function handlePointerDown(e: React.PointerEvent) {
     if (!pos) return;
@@ -96,17 +139,14 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     const startY = e.clientY;
     const startPos = pos;
 
+    const pipW = collapsed ? 72 : 280;
+    const pipH = collapsed ? 72 : 168;
+
     const onMove = (ev: PointerEvent) => {
       if (!rootRef.current) return;
-      const rect = rootRef.current.getBoundingClientRect();
       const nextX = startPos.x + (ev.clientX - startX);
       const nextY = startPos.y + (ev.clientY - startY);
-      const maxX = window.innerWidth - rect.width - 8;
-      const maxY = window.innerHeight - rect.height - 8;
-      setPos({
-        x: clamp(nextX, 8, Math.max(8, maxX)),
-        y: clamp(nextY, 8, Math.max(8, maxY)),
-      });
+      setPos(clampPipPos(nextX, nextY, pipW, pipH));
     };
 
     const onUp = () => {
@@ -134,7 +174,8 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
         dragging ? "cursor-grabbing" : "cursor-grab"
       }`}
       style={{
-        transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
+        left: pos.x,
+        top: pos.y,
         width: size.w,
         height: size.h,
       }}
