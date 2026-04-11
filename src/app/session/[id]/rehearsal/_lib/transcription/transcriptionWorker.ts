@@ -39,6 +39,16 @@ async function getTranscriber() {
     const { env, pipeline } = await import("@huggingface/transformers");
     env.useBrowserCache = true;
     env.allowLocalModels = false;
+    // Worker 直连 huggingface.co 易 Failed to fetch（网络/扩展等）；改走同源 /api/hf 代理
+    const origin =
+      typeof self !== "undefined" && typeof self.location?.origin === "string"
+        ? self.location.origin
+        : "";
+    const directHub =
+      typeof process !== "undefined" && process.env?.NEXT_PUBLIC_HF_HUB_DIRECT === "1";
+    if (origin && !directHub) {
+      env.remoteHost = `${origin}/api/hf/`;
+    }
     // 不强制 q8：部分环境下量化配置会导致 pipeline 卡住或失败，交给库默认选型
     pipePromise = pipeline("automatic-speech-recognition", WHISPER_MODEL_ID);
   }
