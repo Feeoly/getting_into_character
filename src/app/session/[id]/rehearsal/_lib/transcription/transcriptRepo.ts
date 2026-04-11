@@ -138,10 +138,48 @@ export async function getJob(jobId: string): Promise<TranscriptionJobRow | null>
   }
 }
 
-/** 某 take是否已有 queued/processing（幂等入队） */
+/** processing 超过此时长视为僵死，允许新入队/重试（避免页面刷新后永久卡住） */
+const PROCESSING_STALE_MS = 12 * 60_000;
+
+/** 某 take 是否已有活跃 queued/processing（幂等入队） */
 export async function hasPendingJobForTake(takeId: string): Promise<boolean> {
   const rows = await db.transcriptionJobs.where("takeId").equals(takeId).toArray();
-  return rows.some((r) => r.status === "queued" || r.status === "processing");
+  const now = Date.now();
+  return rows.some((r) => {
+    if (r.status === "queued") return true;
+    if (r.status === "processing") {
+      return now - r.updatedAt < PROCESSING_STALE_MS;
+    }
+    return false;
+  });
+}
+
+/** 将长时间停在 processing 的任务标为失败，便于 UI 显示重试 */
+export async function failStaleProcessingJobs(
+  maxAgeMs = PROCESSING_STALE_MS,
+): Promise<void> {
+  const now = Date.now();
+  const rows = await db.transcriptionJobs
+    .where("status")
+    .equals("processing")
+    .toArray();
+  for (const j of rows) {
+    if (now - j.updatedAt > maxAgeMs) {
+      await markJobFailed(
+        j.id,
+        "stalled",
+        "转写长时间无响应，请重试转写或重新录制。",
+      );
+    }
+  }
+}
+
+export async function listProcessingJobIds(): Promise<string[]> {
+  const rows = await db.transcriptionJobs
+    .where("status")
+    .equals("processing")
+    .toArray();
+  return rows.map((r) => r.id);
 }
 
 export async function getLatestJobForSession(

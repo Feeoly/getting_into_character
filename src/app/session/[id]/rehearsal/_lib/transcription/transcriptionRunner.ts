@@ -7,6 +7,7 @@ import {
   getJob,
   getLatestJobForTake,
   hasPendingJobForTake,
+  listProcessingJobIds,
   markJobFailed,
   markJobProcessing,
   markJobSucceeded,
@@ -17,8 +18,19 @@ const MAX_BLOB_BYTES = 200 * 1024 * 1024;
 const TARGET_RATE = 16_000;
 
 const queue: string[] = [];
+const queuedSet = new Set<string>();
+const inFlightJobs = new Set<string>();
 let draining = false;
 let worker: Worker | null = null;
+
+const JOB_TIMEOUT_MS = 15 * 60_000;
+
+function pushJobToQueue(jobId: string) {
+  if (inFlightJobs.has(jobId)) return;
+  if (queuedSet.has(jobId)) return;
+  queuedSet.add(jobId);
+  queue.push(jobId);
+}
 
 const modelLoading = new Set<(v: boolean) => void>();
 const jobFailed = new Set<
@@ -51,14 +63,25 @@ function emitJobFailed(p: {
   for (const cb of jobFailed) cb(p);
 }
 
+/**
+ * 必须在任意展示转写状态的客户端页面挂载（含会话详情）：否则刷新后 processing 任务不会继续跑 Worker。
+ */
 export function startTranscriptionRunner(): void {
   if (typeof window === "undefined") return;
+  void (async () => {
+    const processingIds = await listProcessingJobIds();
+    for (const id of processingIds) pushJobToQueue(id);
+    void drainQueue();
+  })();
 }
 
 function ensureWorker(): Worker {
   if (!worker) {
     worker = new Worker(new URL("./transcriptionWorker.ts", import.meta.url), {
       type: "module",
+    });
+    worker.addEventListener("error", (e) => {
+      console.error("[transcription] Worker error:", e.message);
     });
   }
   return worker;
@@ -125,7 +148,7 @@ export async function enqueueTranscriptionAfterRecording(
     engineId: HF_TRANSCRIPTION_ENGINE_ID,
     modelId: WHISPER_MODEL_ID,
   });
-  queue.push(jobId);
+  pushJobToQueue(jobId);
   void drainQueue();
 }
 
@@ -147,7 +170,7 @@ export async function retryTranscriptionForTake(
     engineId: HF_TRANSCRIPTION_ENGINE_ID,
     modelId: WHISPER_MODEL_ID,
   });
-  queue.push(jobId);
+  pushJobToQueue(jobId);
   void drainQueue();
 }
 
@@ -157,7 +180,10 @@ async function drainQueue() {
   try {
     while (queue.length > 0) {
       const jobId = queue.shift();
-      if (jobId) await processJob(jobId);
+      if (jobId) {
+        queuedSet.delete(jobId);
+        await processJob(jobId);
+      }
     }
   } finally {
     draining = false;
@@ -165,37 +191,74 @@ async function drainQueue() {
 }
 
 async function processJob(jobId: string) {
+  if (inFlightJobs.has(jobId)) return;
   const job = await getJob(jobId);
-  if (!job || job.status !== "queued") return;
-
-  if (job.audioBlob.size > MAX_BLOB_BYTES) {
-    await markJobFailed(jobId, "blob_too_large", "录音文件过大，无法转写。");
-    emitJobFailed({ jobId, sessionId: job.sessionId, takeId: job.takeId });
-    return;
-  }
-
-  await markJobProcessing(jobId);
-
-  let samples: Float32Array;
-  try {
-    samples = await decodeBlobToMono16k(job.audioBlob);
-  } catch (e) {
-    emitModelLoading(false);
-    await markJobFailed(
-      jobId,
-      "decode_error",
-      e instanceof Error ? e.message : "音频解码失败",
-    );
-    emitJobFailed({ jobId, sessionId: job.sessionId, takeId: job.takeId });
-    return;
-  }
-
-  const w = ensureWorker();
-  const chunks: TranscriptChunk[] = [];
-  let loadingEmitted = false;
+  if (!job) return;
+  if (job.status !== "queued" && job.status !== "processing") return;
+  inFlightJobs.add(jobId);
 
   try {
+    if (job.audioBlob.size > MAX_BLOB_BYTES) {
+      await markJobFailed(jobId, "blob_too_large", "录音文件过大，无法转写。");
+      emitJobFailed({ jobId, sessionId: job.sessionId, takeId: job.takeId });
+      return;
+    }
+
+    if (job.status === "queued") {
+      await markJobProcessing(jobId);
+    }
+
+    let samples: Float32Array;
+    try {
+      samples = await decodeBlobToMono16k(job.audioBlob);
+      if (samples.length === 0) {
+        emitModelLoading(false);
+        await markJobFailed(jobId, "empty_audio", "无有效音频数据。");
+        emitJobFailed({ jobId, sessionId: job.sessionId, takeId: job.takeId });
+        return;
+      }
+    } catch (e) {
+      emitModelLoading(false);
+      await markJobFailed(
+        jobId,
+        "decode_error",
+        e instanceof Error ? e.message : "音频解码失败",
+      );
+      emitJobFailed({ jobId, sessionId: job.sessionId, takeId: job.takeId });
+      return;
+    }
+
+    const w = ensureWorker();
+    const chunks: TranscriptChunk[] = [];
+    let loadingEmitted = false;
+    let settled = false;
+
     await new Promise<void>((resolve, reject) => {
+      const timeout = window.setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        w.removeEventListener("message", onMessage);
+        w.removeEventListener("messageerror", onMsgErr);
+        emitModelLoading(false);
+        reject(new Error("转写超时，请重试或检查网络与控制台错误。"));
+      }, JOB_TIMEOUT_MS);
+
+      const finish = (fn: () => void) => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeout);
+        fn();
+      };
+
+      const onMsgErr = () => {
+        finish(() => {
+          w.removeEventListener("message", onMessage);
+          w.removeEventListener("messageerror", onMsgErr);
+          emitModelLoading(false);
+          reject(new Error("Worker 消息异常（可能为模型脚本加载失败）。"));
+        });
+      };
+
       const onMessage = (ev: MessageEvent) => {
         const m = ev.data as
           | { type: "model_loading"; jobId: string }
@@ -213,17 +276,24 @@ async function processJob(jobId: string) {
         }
         if (m.type === "chunk") chunks.push(m.chunk);
         if (m.type === "done") {
-          w.removeEventListener("message", onMessage);
-          emitModelLoading(false);
-          resolve();
+          finish(() => {
+            w.removeEventListener("message", onMessage);
+            w.removeEventListener("messageerror", onMsgErr);
+            emitModelLoading(false);
+            resolve();
+          });
         }
         if (m.type === "error") {
-          w.removeEventListener("message", onMessage);
-          emitModelLoading(false);
-          reject(new Error(m.message));
+          finish(() => {
+            w.removeEventListener("message", onMessage);
+            w.removeEventListener("messageerror", onMsgErr);
+            emitModelLoading(false);
+            reject(new Error(m.message));
+          });
         }
       };
       w.addEventListener("message", onMessage);
+      w.addEventListener("messageerror", onMsgErr);
       const copy = new Float32Array(samples.length);
       copy.set(samples);
       w.postMessage(
@@ -244,5 +314,7 @@ async function processJob(jobId: string) {
       e instanceof Error ? e.message : String(e),
     );
     emitJobFailed({ jobId, sessionId: job.sessionId, takeId: job.takeId });
+  } finally {
+    inFlightJobs.delete(jobId);
   }
 }

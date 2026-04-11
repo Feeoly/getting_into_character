@@ -9,7 +9,10 @@ import type { Session } from "../../../../_lib/sessionTypes";
 import { listSegmentsForTake } from "../../rehearsal/_lib/transcription/transcriptRepo";
 import type { TranscriptSegmentRow } from "../../rehearsal/_lib/transcription/transcriptionTypes";
 import { stt } from "../../rehearsal/_lib/transcription/sttCopy";
-import { retryTranscriptionForTake } from "../../rehearsal/_lib/transcription/transcriptionRunner";
+import {
+  retryTranscriptionForTake,
+  startTranscriptionRunner,
+} from "../../rehearsal/_lib/transcription/transcriptionRunner";
 
 function fmt(ms: number): string {
   const s = Math.floor(ms / 1000);
@@ -33,6 +36,10 @@ export default function TranscriptPage({
   const [tick, setTick] = useState(0);
 
   const takeOk = takeIdSchema.safeParse(takeId).success;
+
+  useEffect(() => {
+    startTranscriptionRunner();
+  }, []);
 
   useEffect(() => {
     if (!takeOk) {

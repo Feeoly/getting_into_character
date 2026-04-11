@@ -4,12 +4,16 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import {
+  failStaleProcessingJobs,
   getLatestJobForSession,
   listSegmentsForTake,
 } from "./transcriptRepo";
 import type { TranscriptionJobRow } from "./transcriptionTypes";
 import { previewSnippet, stt } from "./sttCopy";
-import { retryTranscriptionForTake } from "./transcriptionRunner";
+import {
+  retryTranscriptionForTake,
+  startTranscriptionRunner,
+} from "./transcriptionRunner";
 
 type Props = { sessionId: string };
 
@@ -34,6 +38,10 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
+    startTranscriptionRunner();
+  }, []);
+
+  useEffect(() => {
     const t = window.setInterval(() => setTick((x) => x + 1), 2000);
     return () => window.clearInterval(t);
   }, []);
@@ -41,6 +49,7 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      await failStaleProcessingJobs();
       const j = await getLatestJobForSession(sessionId);
       if (cancelled) return;
       setJob(j);

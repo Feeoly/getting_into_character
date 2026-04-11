@@ -1,7 +1,5 @@
 /// <reference lib="webworker" />
 
-import { env, pipeline } from "@huggingface/transformers";
-
 import { WHISPER_MODEL_ID } from "./hfWhisperEngine";
 
 type MainToWorker = {
@@ -24,15 +22,15 @@ type WorkerToMain =
 declare const self: DedicatedWorkerGlobalScope;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-let pipePromise: any = null;
+let pipePromise: Promise<any> | null = null;
 
 async function getTranscriber() {
   if (!pipePromise) {
+    const { env, pipeline } = await import("@huggingface/transformers");
     env.useBrowserCache = true;
     env.allowLocalModels = false;
-    pipePromise = pipeline("automatic-speech-recognition", WHISPER_MODEL_ID, {
-      dtype: "q8",
-    });
+    // 不强制 q8：部分环境下量化配置会导致 pipeline 卡住或失败，交给库默认选型
+    pipePromise = pipeline("automatic-speech-recognition", WHISPER_MODEL_ID);
   }
   return pipePromise;
 }
@@ -51,6 +49,10 @@ self.onmessage = async (ev: MessageEvent<MainToWorker>) => {
       jobId,
       message: `sampleRate 须为 16000，当前 ${sampleRate}`,
     });
+    return;
+  }
+  if (samples.length === 0) {
+    post({ type: "error", jobId, message: "音频长度为 0，无法转写。" });
     return;
   }
   try {
@@ -101,6 +103,7 @@ self.onmessage = async (ev: MessageEvent<MainToWorker>) => {
 
     post({ type: "done", jobId });
   } catch (e) {
+    pipePromise = null;
     post({
       type: "error",
       jobId,
