@@ -1,6 +1,7 @@
 # Requirements: Getting Into Character（面试角色排练）
 
 **Defined:** 2026-04-09  
+**Last requirement pass:** 2026-04-11（明确 RECD-03 录制中实时预览 + 可拖拽验收）  
 **Core Value:** 用户能在面试前快速进入角色并稳定输出表达
 
 ## v1 Requirements
@@ -26,7 +27,7 @@
 
 - [x] **RECD-01**: 用户可授权并录制麦克风音频（至少音频录制稳定可用）
 - [x] **RECD-02**: 用户可启用摄像头画面录制（可选项，权限按需请求）
-- [x] **RECD-03**: 排练页存在一个可移动的“录制画面/预览区域”（拖拽位置可用）
+- [ ] **RECD-03**: 排练页存在**可拖拽移动**的「录制预览区」：**自点击「开始录制」起至「结束录制」止**，当用户已启用摄像头或屏幕/窗口共享时，该区域须**持续显示与采集同源**的实时画面（不得仅在录制结束后才出现画面）；仅麦克风、无视频轨时可显示占位说明。拖拽改变位置**不得**中断录制或导致已采集内容丢失。
 - [x] **RECD-04**: 用户可回放本次录制内容（至少音频可回放；若有视频则同步回放）
 
 ### STT（语音转写）
@@ -94,7 +95,7 @@
 | SCEN-02 | Phase 2 | Complete |
 | RECD-01 | Phase 2 | Complete |
 | RECD-02 | Phase 2 | Complete |
-| RECD-03 | Phase 2 | Complete |
+| RECD-03 | Phase 2 | Open（2026-04-11 补充实时预览 + 拖拽验收口径） |
 | RECD-04 | Phase 2 | Complete |
 | STT-01 | Phase 3 | Pending |
 | STT-02 | Phase 3 | Pending |
@@ -111,10 +112,10 @@
 | SETT-01 | Phase 2 | Complete |
 
 **Coverage:**
-- v1 requirements: 25 total
+- v1 requirements: 25 total（其中 RECD-03 已升级验收口径，待按新标准复验）
 - Mapped to phases: 25
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-09*  
-*Last updated: 2026-04-09 after initial definition*
+*Last updated: 2026-04-11 — RECD-03 明确「录制中实时预览 + 可拖拽」*
