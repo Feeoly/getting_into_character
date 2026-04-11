@@ -18,7 +18,8 @@ type Props = {
   /** 父级持有的当前媒体流，用于监听屏幕共享被用户终止等 */
   liveStream: MediaStream | null;
   onLiveStreamChange: (stream: MediaStream | null) => void;
-  onPlaybackChange: (playback: StopRecordingResult | null) => void;
+  /** 可选：此前用于父级 PiP；面板内已有回放状态 */
+  onPlaybackChange?: (playback: StopRecordingResult | null) => void;
   onRecordingEpochStart: (epochMs: number | null) => void;
 };
 
@@ -60,7 +61,7 @@ export function RecorderPanel({
       onLiveStreamChange(null);
       onRecordingEpochStart(null);
       setPlayback(res);
-      onPlaybackChange(res);
+      onPlaybackChange?.(res);
       setStatus("stopped");
     } catch (e) {
       onLiveStreamChange(null);
@@ -73,7 +74,7 @@ export function RecorderPanel({
   const onStart = useCallback(async () => {
     setError(null);
     setStatus("requesting");
-    onPlaybackChange(null);
+    onPlaybackChange?.(null);
     setPlayback(null);
     try {
       const res = await startRecording({
