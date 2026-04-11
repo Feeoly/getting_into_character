@@ -101,8 +101,16 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
     if (!liveStream) return;
     if (recordingEpochStartMs === null) return;
 
+    // 与 <video srcObject=同一流> 并行时，部分浏览器 WebAudio 会导致画面黑屏；分析用 clone
+    let streamForDetector: MediaStream = liveStream;
+    try {
+      streamForDetector = liveStream.clone();
+    } catch {
+      // 极少数环境不支持 clone，退回原流
+    }
+
     const detector = createPauseDetector({
-      stream: liveStream,
+      stream: streamForDetector,
       thresholdMs: settings.pauseThresholdMs,
       energyFloor: 0.02,
       smoothingMs: 400,
@@ -140,7 +148,18 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
       },
     });
 
-    return () => detector.stop();
+    return () => {
+      detector.stop();
+      if (streamForDetector !== liveStream) {
+        for (const t of streamForDetector.getTracks()) {
+          try {
+            t.stop();
+          } catch {
+            // ignore
+          }
+        }
+      }
+    };
   }, [
     id,
     liveStream,
@@ -209,7 +228,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
   }
 
   return (
-    <main className="relative min-h-dvh overflow-x-hidden text-white">
+    <main className="relative min-h-dvh text-white">
       {/* 全屏沉浸背景（fixed 避免与 flex 子项高度互相影响导致不铺满） */}
       <div className="pointer-events-none fixed inset-0 z-0">
         {background.kind === "video" ? (

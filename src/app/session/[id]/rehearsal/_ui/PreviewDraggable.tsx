@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Props = {
   liveStream?: MediaStream | null;
@@ -19,37 +20,44 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [pos, setPos] = useState<Pos | null>(null);
   const [dragging, setDragging] = useState(false);
-  /** 仅用户手动收起；不在窄屏默认收起（否则 Cursor 内置预览宽度易 <640px，且收起时未挂载 video 会导致 srcObject 从未绑定） */
+  /** 仅用户手动收起 */
   const [collapsed, setCollapsed] = useState(false);
 
-  const hasVideoTrack = useMemo(() => {
-    if (mode === "playback") return Boolean(playbackUrl);
-    return Boolean(liveStream?.getVideoTracks?.().length);
-  }, [liveStream, playbackUrl, mode]);
+  /** 有流就挂 <video>：避免仅靠 getVideoTracks 时机导致永远不挂载 */
+  const showPip = useMemo(() => {
+    if (mode === "live") return Boolean(liveStream);
+    return Boolean(playbackUrl);
+  }, [liveStream, mode, playbackUrl]);
 
-  // 始终在有 ref 时绑定 live 流并尝试播放（收起态也挂载 video，避免漏绑）
+  const hasLiveVideoTrack = useMemo(
+    () => Boolean(liveStream?.getVideoTracks?.().length),
+    [liveStream],
+  );
+
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
     if (mode === "live" && liveStream) {
       v.srcObject = liveStream;
-      void v.play().catch(() => {
-        /* 部分环境需用户手势后才可 play，开始录制已算手势 */
-      });
-      return;
+      void v.play().catch(() => {});
+      return () => {
+        v.srcObject = null;
+      };
     }
 
     if (mode === "playback" && playbackUrl) {
       v.srcObject = null;
       v.src = playbackUrl;
       void v.play().catch(() => {});
-      return;
+      return () => {
+        v.removeAttribute("src");
+      };
     }
 
     v.srcObject = null;
     v.removeAttribute("src");
-  }, [liveStream, mode, playbackUrl, collapsed]);
+  }, [liveStream, mode, playbackUrl, showPip]);
 
   useEffect(() => {
     if (!pos) return;
@@ -114,7 +122,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
 
   const size = collapsed ? { w: 72, h: 72 } : { w: 280, h: 168 };
 
-  return (
+  const pip = (
     <div
       ref={rootRef}
       className={`fixed z-[45] select-none ${
@@ -132,14 +140,21 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
           collapsed ? "rounded-full" : "rounded-xl"
         }`}
       >
-        {hasVideoTrack ? (
-          <video
-            ref={videoRef}
-            className="absolute inset-0 h-full w-full object-cover"
-            autoPlay
-            muted
-            playsInline
-          />
+        {showPip ? (
+          <>
+            <video
+              ref={videoRef}
+              className="absolute inset-0 h-full w-full object-cover"
+              autoPlay
+              muted
+              playsInline
+            />
+            {mode === "live" && liveStream && !hasLiveVideoTrack ? (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50 px-2 text-center text-[11px] font-medium text-white/90">
+                未检测到视频轨（仅麦克风）
+              </div>
+            ) : null}
+          </>
         ) : (
           <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs font-semibold text-white/80">
             {mode === "live"
@@ -148,7 +163,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
           </div>
         )}
 
-        {collapsed && hasVideoTrack ? (
+        {collapsed && showPip ? (
           <button
             type="button"
             className="absolute inset-0 z-10 flex items-end justify-center rounded-full bg-gradient-to-t from-black/70 via-black/20 to-transparent pb-1.5 text-[10px] font-semibold text-white/95"
@@ -161,7 +176,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
           </button>
         ) : null}
 
-        {!collapsed && hasVideoTrack ? (
+        {!collapsed && showPip ? (
           <button
             type="button"
             className="absolute right-1.5 top-1.5 z-10 inline-flex h-8 items-center justify-center rounded-lg bg-white/90 px-2.5 text-xs font-semibold text-slate-900 outline-none ring-offset-2 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-600"
@@ -176,4 +191,8 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
       </div>
     </div>
   );
+
+  if (typeof document === "undefined" || !document.body) return pip;
+
+  return createPortal(pip, document.body);
 }
