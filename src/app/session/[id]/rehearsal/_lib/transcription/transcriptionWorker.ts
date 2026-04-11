@@ -49,8 +49,10 @@ async function getTranscriber() {
     if (origin && !directHub) {
       env.remoteHost = `${origin}/api/hf/`;
     }
-    // 不强制 q8：部分环境下量化配置会导致 pipeline 卡住或失败，交给库默认选型
-    pipePromise = pipeline("automatic-speech-recognition", WHISPER_MODEL_ID);
+    // WASM 默认 q8；当前 onnxruntime-web 与 whisper-tiny 的 QDQ 权重会报 Missing required scale
+    pipePromise = pipeline("automatic-speech-recognition", WHISPER_MODEL_ID, {
+      dtype: "fp32",
+    });
   }
   return pipePromise;
 }
