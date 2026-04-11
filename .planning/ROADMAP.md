@@ -48,7 +48,11 @@ Plans:
   1. 用户完成一次练习后，系统能为该会话生成转写文本并在复盘/会话中可见
   2. 转写文本包含基本时间信息，用户能定位到大致时间段/片段（用于跳转与引用）
   3. 在断网情况下，核心流程仍可运行，且转写默认不上传（用户可通过可观察行为验证：无上传依赖、无“必须联网才能转写”的路径）
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 03-01-PLAN.md — Dexie 转写表 + Zod + transcriptRepo + TranscriptionEngine + noop 占位
+- [ ] 03-02-PLAN.md — Worker + HF Whisper ONNX 管线 + 录制结束入队 + takeId + 替换策略落地
+- [ ] 03-03-PLAN.md — 会话摘要卡片 + 全文只读路由 + Toast/重试/初始化条（UI-SPEC）
 **UI hint**: yes
 
 ### Phase 4: 复盘闭环 + 导出/删除
@@ -81,7 +85,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. 信任基线与会话骨架 | 0/2 | Not started | - |
 | 2. 排练页录制与停顿事件 MVP | 0/0 | Not started | - |
-| 3. 本地转写管线（可插拔引擎） | 0/0 | Not started | - |
+| 3. 本地转写管线（可插拔引擎） | 0/3 | Not started | - |
 | 4. 复盘闭环 + 导出/删除 | 0/0 | Not started | - |
 | 5. 角色卡差异化 + 证据锚定建议 | 0/0 | Not started | - |
 
