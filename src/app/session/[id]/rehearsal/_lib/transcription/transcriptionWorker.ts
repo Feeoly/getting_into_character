@@ -21,6 +21,8 @@ type WorkerToMain =
 
 declare const self: DedicatedWorkerGlobalScope;
 
+const DBG = "[transcription:worker]";
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let pipePromise: Promise<any> | null = null;
 
@@ -43,6 +45,7 @@ self.onmessage = async (ev: MessageEvent<MainToWorker>) => {
   const data = ev.data;
   if (data?.type !== "transcribe") return;
   const { jobId, samples, sampleRate } = data;
+  console.log(`${DBG} transcribe`, { jobId, samples: samples.length, sampleRate });
   if (sampleRate !== 16_000) {
     post({
       type: "error",
@@ -57,7 +60,9 @@ self.onmessage = async (ev: MessageEvent<MainToWorker>) => {
   }
   try {
     post({ type: "model_loading", jobId });
+    console.log(`${DBG} load pipeline / model`, { jobId, modelId: WHISPER_MODEL_ID });
     const transcriber = await getTranscriber();
+    console.log(`${DBG} pipeline ready, infer`, { jobId });
     const output = (await transcriber(samples, {
       chunk_length_s: 30,
       stride_length_s: 5,
@@ -101,9 +106,15 @@ self.onmessage = async (ev: MessageEvent<MainToWorker>) => {
       });
     }
 
+    console.log(`${DBG} infer done`, {
+      jobId,
+      rawChunks: rawChunks?.length ?? 0,
+      fallbackText: Boolean(output.text?.trim()),
+    });
     post({ type: "done", jobId });
   } catch (e) {
     pipePromise = null;
+    console.warn(`${DBG} error`, { jobId, err: e });
     post({
       type: "error",
       jobId,

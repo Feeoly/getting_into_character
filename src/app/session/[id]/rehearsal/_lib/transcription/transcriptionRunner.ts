@@ -26,11 +26,14 @@ let worker: Worker | null = null;
 
 const JOB_TIMEOUT_MS = 15 * 60_000;
 
+const DBG = "[transcription]";
+
 function pushJobToQueue(jobId: string) {
   if (inFlightJobs.has(jobId)) return;
   if (queuedSet.has(jobId)) return;
   queuedSet.add(jobId);
   queue.push(jobId);
+  console.log(`${DBG} queue push`, { jobId, depth: queue.length });
 }
 
 const modelLoading = new Set<(v: boolean) => void>();
@@ -71,6 +74,9 @@ export function startTranscriptionRunner(): void {
   if (typeof window === "undefined") return;
   void (async () => {
     const processingIds = await listProcessingJobIds();
+    if (processingIds.length > 0) {
+      console.log(`${DBG} resume processing jobs`, { count: processingIds.length, ids: processingIds });
+    }
     for (const id of processingIds) pushJobToQueue(id);
     void drainQueue();
   })();
@@ -136,9 +142,18 @@ export async function enqueueTranscriptionAfterRecording(
 ): Promise<void> {
   if (typeof window === "undefined") return;
   startTranscriptionRunner();
-  if (input.blob.size === 0) return;
-  if (input.blob.size > MAX_BLOB_BYTES) return;
-  if (await hasPendingJobForTake(input.takeId)) return;
+  if (input.blob.size === 0) {
+    console.log(`${DBG} skip enqueue: empty blob`, { takeId: input.takeId });
+    return;
+  }
+  if (input.blob.size > MAX_BLOB_BYTES) {
+    console.log(`${DBG} skip enqueue: blob too large`, { takeId: input.takeId, bytes: input.blob.size });
+    return;
+  }
+  if (await hasPendingJobForTake(input.takeId)) {
+    console.log(`${DBG} skip enqueue: pending job for take`, { takeId: input.takeId });
+    return;
+  }
 
   const jobId = await enqueueTranscriptionJob({
     sessionId: input.sessionId,
@@ -149,6 +164,7 @@ export async function enqueueTranscriptionAfterRecording(
     engineId: HF_TRANSCRIPTION_ENGINE_ID,
     modelId: WHISPER_MODEL_ID,
   });
+  console.log(`${DBG} enqueued after recording`, { jobId, takeId: input.takeId, bytes: input.blob.size });
   pushJobToQueue(jobId);
   void drainQueue();
 }
@@ -162,9 +178,17 @@ export async function retryTranscriptionForTake(
 ): Promise<boolean> {
   if (typeof window === "undefined") return false;
   startTranscriptionRunner();
+  console.log(`${DBG} retry: supersede active jobs`, { sessionId, takeId });
   await supersedeActiveJobsForTake(takeId);
   const prev = await getLatestJobForTake(sessionId, takeId);
-  if (!prev || prev.audioBlob.size === 0) return false;
+  if (!prev || prev.audioBlob.size === 0) {
+    console.log(`${DBG} retry: no blob from latest job`, {
+      takeId,
+      hasPrev: Boolean(prev),
+      blobBytes: prev?.audioBlob.size ?? 0,
+    });
+    return false;
+  }
 
   try {
     const jobId = await enqueueTranscriptionJob({
@@ -176,10 +200,12 @@ export async function retryTranscriptionForTake(
       engineId: HF_TRANSCRIPTION_ENGINE_ID,
       modelId: WHISPER_MODEL_ID,
     });
+    console.log(`${DBG} retry: new job enqueued`, { jobId, takeId, bytes: prev.audioBlob.size });
     pushJobToQueue(jobId);
     void drainQueue();
     return true;
-  } catch {
+  } catch (e) {
+    console.warn(`${DBG} retry: enqueue failed`, e);
     return false;
   }
 }
@@ -201,14 +227,31 @@ async function drainQueue() {
 }
 
 async function processJob(jobId: string) {
-  if (inFlightJobs.has(jobId)) return;
+  if (inFlightJobs.has(jobId)) {
+    console.log(`${DBG} processJob skip: already in flight`, { jobId });
+    return;
+  }
   const job = await getJob(jobId);
-  if (!job) return;
-  if (job.status !== "queued" && job.status !== "processing") return;
+  if (!job) {
+    console.log(`${DBG} processJob skip: job missing`, { jobId });
+    return;
+  }
+  if (job.status !== "queued" && job.status !== "processing") {
+    console.log(`${DBG} processJob skip: status not runnable`, { jobId, status: job.status });
+    return;
+  }
   inFlightJobs.add(jobId);
+  console.log(`${DBG} processJob start`, {
+    jobId,
+    takeId: job.takeId,
+    status: job.status,
+    blobBytes: job.audioBlob.size,
+    mimeType: job.mimeType,
+  });
 
   try {
     if (job.audioBlob.size > MAX_BLOB_BYTES) {
+      console.warn(`${DBG} fail: blob too large`, { jobId, bytes: job.audioBlob.size });
       await markJobFailed(jobId, "blob_too_large", "录音文件过大，无法转写。");
       emitJobFailed({ jobId, sessionId: job.sessionId, takeId: job.takeId });
       return;
@@ -216,11 +259,14 @@ async function processJob(jobId: string) {
 
     if (job.status === "queued") {
       await markJobProcessing(jobId);
+      console.log(`${DBG} marked processing`, { jobId });
     }
 
     let samples: Float32Array;
     try {
+      console.log(`${DBG} decode start`, { jobId });
       samples = await decodeBlobToMono16k(job.audioBlob);
+      console.log(`${DBG} decode ok`, { jobId, samples: samples.length });
       if (samples.length === 0) {
         emitModelLoading(false);
         await markJobFailed(jobId, "empty_audio", "无有效音频数据。");
@@ -229,6 +275,7 @@ async function processJob(jobId: string) {
       }
     } catch (e) {
       emitModelLoading(false);
+      console.warn(`${DBG} decode error`, { jobId, err: e });
       await markJobFailed(
         jobId,
         "decode_error",
@@ -250,6 +297,7 @@ async function processJob(jobId: string) {
         w.removeEventListener("message", onMessage);
         w.removeEventListener("messageerror", onMsgErr);
         emitModelLoading(false);
+        console.warn(`${DBG} worker timeout`, { jobId, ms: JOB_TIMEOUT_MS });
         reject(new Error("转写超时，请重试或检查网络与控制台错误。"));
       }, JOB_TIMEOUT_MS);
 
@@ -265,6 +313,7 @@ async function processJob(jobId: string) {
           w.removeEventListener("message", onMessage);
           w.removeEventListener("messageerror", onMsgErr);
           emitModelLoading(false);
+          console.warn(`${DBG} worker messageerror`, { jobId });
           reject(new Error("Worker 消息异常（可能为模型脚本加载失败）。"));
         });
       };
@@ -283,6 +332,7 @@ async function processJob(jobId: string) {
         if (m.type === "model_loading" && !loadingEmitted) {
           loadingEmitted = true;
           emitModelLoading(true);
+          console.log(`${DBG} worker model_loading`, { jobId });
         }
         if (m.type === "chunk") chunks.push(m.chunk);
         if (m.type === "done") {
@@ -290,6 +340,7 @@ async function processJob(jobId: string) {
             w.removeEventListener("message", onMessage);
             w.removeEventListener("messageerror", onMsgErr);
             emitModelLoading(false);
+            console.log(`${DBG} worker done`, { jobId, chunkCount: chunks.length });
             resolve();
           });
         }
@@ -298,6 +349,7 @@ async function processJob(jobId: string) {
             w.removeEventListener("message", onMessage);
             w.removeEventListener("messageerror", onMsgErr);
             emitModelLoading(false);
+            console.warn(`${DBG} worker error message`, { jobId, message: m.message });
             reject(new Error(m.message));
           });
         }
@@ -306,6 +358,7 @@ async function processJob(jobId: string) {
       w.addEventListener("messageerror", onMsgErr);
       const copy = new Float32Array(samples.length);
       copy.set(samples);
+      console.log(`${DBG} post to worker`, { jobId, samples: copy.length });
       w.postMessage(
         {
           type: "transcribe",
@@ -317,18 +370,35 @@ async function processJob(jobId: string) {
       );
     });
     const liveOk = await getJob(jobId);
-    if (!liveOk || liveOk.status !== "processing") return;
+    if (!liveOk || liveOk.status !== "processing") {
+      console.log(`${DBG} skip markJobSucceeded (job superseded or not processing)`, {
+        jobId,
+        status: liveOk?.status,
+      });
+      return;
+    }
     await markJobSucceeded(jobId, chunks);
+    console.log(`${DBG} succeeded`, { jobId, takeId: job.takeId, segments: chunks.length });
   } catch (e) {
     const liveFail = await getJob(jobId);
-    if (!liveFail || liveFail.status !== "processing") return;
+    if (!liveFail || liveFail.status !== "processing") {
+      console.log(`${DBG} skip markJobFailed after error (job not processing)`, {
+        jobId,
+        status: liveFail?.status,
+        err: e,
+      });
+      return;
+    }
+    const msg = e instanceof Error ? e.message : String(e);
+    console.warn(`${DBG} mark failed`, { jobId, message: msg });
     await markJobFailed(
       jobId,
       "worker_error",
-      e instanceof Error ? e.message : String(e),
+      msg,
     );
     emitJobFailed({ jobId, sessionId: job.sessionId, takeId: job.takeId });
   } finally {
     inFlightJobs.delete(jobId);
+    console.log(`${DBG} processJob end`, { jobId });
   }
 }

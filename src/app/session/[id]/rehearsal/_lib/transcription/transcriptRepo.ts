@@ -185,14 +185,12 @@ export async function listProcessingJobIds(): Promise<string[]> {
 /** 用户点「重试转写」时：取消该 take 下仍占着位的 queued/processing，否则 hasPending 会一直拦住重试 */
 export async function supersedeActiveJobsForTake(takeId: string): Promise<void> {
   const rows = await db.transcriptionJobs.where("takeId").equals(takeId).toArray();
-  for (const r of rows) {
-    if (r.status === "queued" || r.status === "processing") {
-      await markJobFailed(
-        r.id,
-        "superseded",
-        "已取消（用户重试或新任务取代）。",
-      );
-    }
+  const toCancel = rows.filter((r) => r.status === "queued" || r.status === "processing");
+  if (toCancel.length > 0) {
+    console.log("[transcription] supersede jobs", { takeId, count: toCancel.length, ids: toCancel.map((j) => j.id) });
+  }
+  for (const r of toCancel) {
+    await markJobFailed(r.id, "superseded", "已取消（用户重试或新任务取代）。");
   }
 }
 
