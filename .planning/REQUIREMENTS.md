@@ -118,4 +118,4 @@
 
 ---
 *Requirements defined: 2026-04-09*  
-*Last updated: 2026-04-11 — RECD-03 明确「录制中实时预览 + 可拖拽」；实现侧预览轨与 MediaRecorder 解耦（clone）*
+*Last updated: 2026-04-11 — RECD-03 明确「录制中实时预览 + 可拖拽」；停顿检测用流 clone，预览 `<video>` 绑定录制同源 MediaStream*

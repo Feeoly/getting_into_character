@@ -15,22 +15,9 @@ function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
 
-function disposeStream(s: MediaStream | null) {
-  if (!s) return;
-  for (const t of s.getTracks()) {
-    try {
-      t.stop();
-    } catch {
-      // ignore
-    }
-  }
-}
-
 export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  /** 仅用于 <video> 展示，与 MediaRecorder 使用的原流分离，避免 Chrome 等黑屏 */
-  const previewCloneRef = useRef<MediaStream | null>(null);
 
   const [pos, setPos] = useState<Pos | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -62,27 +49,16 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     });
   }, [collapsed]);
 
+  // 实时画面：与 MediaRecorder 共用同一 MediaStream（停顿检测已在 page 侧用 clone，此处不再 clone，避免部分环境双轨异常）
   useLayoutEffect(() => {
     const v = videoRef.current;
-    disposeStream(previewCloneRef.current);
-    previewCloneRef.current = null;
-
     if (!v) return;
 
     if (mode === "live" && liveStream) {
-      let display: MediaStream = liveStream;
-      try {
-        display = liveStream.clone();
-        previewCloneRef.current = display;
-      } catch {
-        previewCloneRef.current = null;
-      }
-      v.srcObject = display;
+      v.srcObject = liveStream;
       void v.play().catch(() => {});
       return () => {
         v.srcObject = null;
-        disposeStream(previewCloneRef.current);
-        previewCloneRef.current = null;
       };
     }
 
@@ -152,6 +128,8 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
   const pip = (
     <div
       ref={rootRef}
+      data-rehearsal-pip="root"
+      aria-label="排练实时画面预览（可拖拽）"
       className={`fixed z-[48] select-none ring-2 ring-white/40 ${
         dragging ? "cursor-grabbing" : "cursor-grab"
       }`}
@@ -163,6 +141,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
       onPointerDown={handlePointerDown}
     >
       <div
+        data-rehearsal-pip="surface"
         className={`relative h-full w-full overflow-hidden border border-white/30 bg-black/70 shadow-xl backdrop-blur-md ${
           collapsed ? "rounded-full" : "rounded-xl"
         }`}
@@ -171,6 +150,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
           <>
             <video
               ref={videoRef}
+              data-rehearsal-pip="video"
               className="absolute inset-0 h-full w-full object-cover"
               autoPlay
               muted
