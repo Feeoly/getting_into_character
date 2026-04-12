@@ -6,19 +6,6 @@ import { review } from "../session/[id]/rehearsal/_lib/transcription/sttCopy";
 import type { TranscriptionJobRow } from "../session/[id]/rehearsal/_lib/transcription/transcriptionTypes";
 import { PrimaryProgressBadge } from "./PrimaryProgressBadge";
 
-const CARD_TONES = [
-  "bg-card-peach/50",
-  "bg-card-lavender/45",
-  "bg-card-sage/50",
-  "bg-card-tan/45",
-] as const;
-
-function cardToneClass(sessionId: string): string {
-  let n = 0;
-  for (let i = 0; i < sessionId.length; i++) n += sessionId.charCodeAt(i);
-  return CARD_TONES[n % CARD_TONES.length] ?? CARD_TONES[0];
-}
-
 function formatDate(ms: number) {
   return new Date(ms).toLocaleString("zh-CN", {
     year: "numeric",
@@ -40,12 +27,8 @@ export function SessionRow({
 }) {
   const sceneTitle = SESSION_SCENE_LABELS[session.scene];
 
-  const tone = cardToneClass(session.id);
-
   return (
-    <div
-      className={`flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border/70 shadow-soft-sm ${tone}`}
-    >
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[var(--radius-card)] bg-surface">
       <Link
         href={`/session/${session.id}`}
         className="flex min-w-0 flex-1 flex-col gap-3 px-4 py-3 transition hover:brightness-[1.02]"
@@ -64,12 +47,11 @@ export function SessionRow({
         </div>
       </Link>
       {reviewHref ? (
-        <Link
-          href={reviewHref}
-          className="border-t border-border/80 bg-surface/90 px-4 py-2.5 text-center text-xs font-semibold text-link hover:bg-accent-muted"
-        >
-          {review.openReview}
-        </Link>
+        <div className="flex justify-center px-4 py-3">
+          <Link href={reviewHref} className="ui-btn ui-btn-sm">
+            {review.openReview}
+          </Link>
+        </div>
       ) : null}
     </div>
   );

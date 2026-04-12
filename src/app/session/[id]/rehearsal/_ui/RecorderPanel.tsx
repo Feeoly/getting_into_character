@@ -131,7 +131,7 @@ export function RecorderPanel({
   }, [status]);
 
   return (
-    <div className="rounded-2xl border border-white/25 bg-black/45 px-5 py-4 text-white shadow-lg backdrop-blur-md">
+    <div className="rounded-2xl bg-black/45 px-5 py-4 text-white shadow-lg backdrop-blur-md">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="text-sm font-semibold">录制</div>
@@ -164,7 +164,7 @@ export function RecorderPanel({
             type="button"
             disabled={!canStart}
             onClick={() => void onStart()}
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-accent px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-accent-hover focus-visible:ring-2 focus-visible:ring-white disabled:pointer-events-none disabled:opacity-35"
+            className="ui-btn ui-btn-equal ui-btn-surface px-6 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)] disabled:opacity-35"
           >
             开始录制
           </button>
@@ -172,7 +172,7 @@ export function RecorderPanel({
             type="button"
             disabled={!canStop}
             onClick={() => void onStop()}
-            className="inline-flex h-11 items-center justify-center rounded-lg border border-white/30 bg-white/10 px-6 text-sm font-semibold text-white outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white disabled:opacity-60"
+            className="ui-btn ui-btn-equal ui-btn-surface px-6 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
           >
             结束录制
           </button>
@@ -188,7 +188,7 @@ export function RecorderPanel({
           ) : (
             <audio className="w-full" src={playback.url} controls />
           )}
-          <div className="rounded-lg border border-white/20 bg-white/5 px-3 py-3 text-sm text-white/90">
+          <div className="rounded-lg bg-white/5 px-3 py-3 text-sm text-white/90">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -208,7 +208,7 @@ export function RecorderPanel({
                     );
                   })();
                 }}
-                className="inline-flex h-9 items-center justify-center rounded-lg border border-white/35 bg-white/10 px-4 text-sm font-semibold text-white outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
+                className="ui-btn ui-btn-sm ui-btn-surface px-4 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
               >
                 保存到本地…
               </button>

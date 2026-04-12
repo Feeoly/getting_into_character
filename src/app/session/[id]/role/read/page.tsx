@@ -75,10 +75,10 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
 
   if (notFound) {
     return (
-      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-2xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+      <main className="min-h-dvh px-6 py-8 md:px-12 md:py-12">
+        <div className="mx-auto max-w-2xl rounded-[var(--radius-card)] bg-surface px-6 py-8">
           <div className="text-sm font-semibold text-ink">会话不存在</div>
-          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-link">
+          <Link href="/" className="ui-btn ui-btn-sm mt-4 inline-flex">
             返回首页
           </Link>
         </div>
@@ -88,7 +88,7 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
 
   if (!session) {
     return (
-      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
+      <main className="min-h-dvh px-6 py-8 md:px-12 md:py-12">
         <div className="mx-auto max-w-2xl text-sm text-ink-muted">加载中…</div>
       </main>
     );
@@ -96,13 +96,10 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
 
   if (!getEffectiveRoleCardText(session)) {
     return (
-      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-2xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+      <main className="min-h-dvh px-6 py-8 md:px-12 md:py-12">
+        <div className="mx-auto max-w-2xl rounded-[var(--radius-card)] bg-surface px-6 py-8">
           <p className="text-sm text-ink-muted">还没有角色卡。请返回会话详情生成并保存。</p>
-          <Link
-            href={`/session/${id}#role-card-section`}
-            className="mt-4 inline-flex text-sm font-semibold text-link"
-          >
+          <Link href={`/session/${id}#role-card-section`} className="ui-btn ui-btn-sm mt-4 inline-flex">
             {role.backToSession}
           </Link>
         </div>
@@ -111,53 +108,47 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
   }
 
   return (
-    <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
-      <div className="mx-auto max-w-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
+    <main className="flex h-dvh max-h-dvh flex-col overflow-hidden px-6 py-6 md:px-12 md:py-8">
+      <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col">
+        <div className="flex shrink-0 items-start gap-4">
+          <div className="min-w-0 flex-1">
             <h1 className="text-[20px] font-semibold leading-[1.2] text-ink">
               {role.readPageTitle}
             </h1>
-            <p className="mt-1 text-sm text-ink-muted">{role.readPageHint}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <BackToHomeLink />
-            <Link
-              href={`/session/${id}`}
-              className="text-sm font-semibold text-link hover:underline"
-            >
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+            <BackToHomeLink variant="toolbar" />
+            <Link href={`/session/${id}`} className="ui-btn ui-btn-equal px-4">
               {role.backToSession}
             </Link>
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-border/80 bg-surface p-5 shadow-soft-sm md:p-6">
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-[var(--radius-card)] bg-surface p-5 md:p-6">
           <RoleCardMarkdown
             markdown={getEffectiveRoleCardText(session) ?? ""}
             variant="read"
           />
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          {ttsSupported ? (
+        <div className="shrink-0 border-t border-soft-border bg-page pt-4 pb-[max(0.25rem,env(safe-area-inset-bottom))]">
+          <div className="flex flex-wrap gap-3">
+            {ttsSupported ? (
+              <button type="button" onClick={onListen} className="ui-btn ui-btn-equal px-6">
+                {role.listenOnce}
+              </button>
+            ) : (
+              <p className="text-xs text-ink-subtle">{role.listenUnsupported}</p>
+            )}
             <button
               type="button"
-              onClick={onListen}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-surface px-6 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
+              disabled={busy}
+              onClick={() => void onComplete()}
+              className="ui-btn ui-btn-equal px-6"
             >
-              {role.listenOnce}
+              {role.completeRead}
             </button>
-          ) : (
-            <p className="text-xs text-ink-subtle">{role.listenUnsupported}</p>
-          )}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void onComplete()}
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-accent px-6 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover disabled:opacity-60"
-          >
-            {role.completeRead}
-          </button>
+          </div>
         </div>
       </div>
     </main>

@@ -22,7 +22,7 @@ export function SessionMeta({ session, latestJob }: Props) {
   const sceneLabel = SESSION_SCENE_LABELS[session.scene];
 
   return (
-    <div className="rounded-2xl border border-border/80 bg-surface px-6 py-5 shadow-soft-sm">
+    <div className="rounded-[var(--radius-card)] bg-surface px-6 py-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-ink">{sceneLabel}</div>

@@ -183,7 +183,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     >
       <div
         data-rehearsal-pip="surface"
-        className={`relative h-full w-full overflow-hidden border border-white/30 bg-black/70 shadow-xl backdrop-blur-md ${
+        className={`relative h-full w-full overflow-hidden bg-black/70 shadow-xl backdrop-blur-md ${
           collapsed ? "rounded-full" : "rounded-xl"
         }`}
       >
@@ -227,7 +227,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
         {!collapsed && showPip ? (
           <button
             type="button"
-            className="absolute right-1.5 top-1.5 z-10 inline-flex h-8 items-center justify-center rounded-lg bg-white/90 px-2.5 text-xs font-semibold text-ink outline-none ring-offset-2 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-accent"
+            className="ui-btn ui-btn-sm ui-btn-surface absolute right-1.5 top-1.5 z-10 px-2.5 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
             onClick={(e) => {
               e.stopPropagation();
               setCollapsed(true);

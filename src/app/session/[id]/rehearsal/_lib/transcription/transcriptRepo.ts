@@ -209,6 +209,33 @@ export async function getLatestJobForSession(
   }
 }
 
+/** 按 take 聚合，每轮取最新一条 job，新→旧排序 */
+export async function listTakesForSession(
+  sessionId: string,
+): Promise<{ takeId: string; latestJob: TranscriptionJobRow }[]> {
+  try {
+    const rows = await db.transcriptionJobs.where("sessionId").equals(sessionId).toArray();
+    const byTake = new Map<string, TranscriptionJobRow[]>();
+    for (const j of rows) {
+      const p = TRANSCRIPTION_JOB_ROW_SCHEMA.safeParse(j);
+      if (!p.success) continue;
+      const arr = byTake.get(j.takeId) ?? [];
+      arr.push(p.data);
+      byTake.set(j.takeId, arr);
+    }
+    const out: { takeId: string; latestJob: TranscriptionJobRow }[] = [];
+    for (const [takeId, jobs] of byTake) {
+      jobs.sort((a, b) => b.createdAt - a.createdAt);
+      const top = jobs[0];
+      if (top) out.push({ takeId, latestJob: top });
+    }
+    out.sort((a, b) => b.latestJob.createdAt - a.latestJob.createdAt);
+    return out;
+  } catch {
+    return [];
+  }
+}
+
 export async function listSegmentsForTake(
   sessionId: string,
   takeId: string,

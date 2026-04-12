@@ -66,7 +66,7 @@ export default function NewSessionPage() {
           新建会话
         </h1>
 
-        <div className="mt-6 space-y-6 rounded-2xl border border-border/80 bg-surface p-6 shadow-soft-sm">
+        <div className="mt-6 space-y-6 rounded-[var(--radius-card)] bg-surface p-6">
           <div>
             <label className="block text-[14px] font-semibold leading-[1.5] text-ink">
               场景
@@ -82,18 +82,18 @@ export default function NewSessionPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="比如：第1次练习，自信角色版本"
-              className="mt-2 h-11 w-full rounded-xl border border-border/90 bg-page px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="mt-2 h-11 w-full rounded-2xl bg-page px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink"
             />
           </div>
 
-          <div className="border-t border-border/60 pt-2">
+          <div className="pt-2">
             <div className="text-sm font-semibold text-ink">{role.sectionTitle}</div>
-            <div className="mt-3 flex flex-col gap-2 rounded-xl border border-border/80 bg-card-sage/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mt-3 flex flex-col gap-2 rounded-2xl bg-page px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <span className="text-xs text-ink-muted">角色模板 · 一键填入后可改</span>
               <button
                 type="button"
                 onClick={applyElenaTemplate}
-                className="inline-flex h-9 shrink-0 items-center justify-center rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-link shadow-soft-sm hover:bg-accent-muted"
+                className="ui-btn ui-btn-sm shrink-0"
               >
                 填入 {ELENA_ROLE_TEMPLATE.label}
               </button>
@@ -106,7 +106,7 @@ export default function NewSessionPage() {
                   onChange={(e) =>
                     setPreset((e.target.value || "") as SessionRoleMoodPreset | "")
                   }
-                  className="mt-2 h-11 w-full min-w-0 cursor-pointer appearance-none rounded-xl border border-border/90 bg-page pl-3 pr-10 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="mt-2 h-11 w-full min-w-0 cursor-pointer appearance-none rounded-2xl bg-page pl-3 pr-10 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink"
                   style={{
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.6' d='M6 8l4 4 4-4'/%3E%3C/svg%3E")`,
                     backgroundRepeat: "no-repeat",
@@ -129,7 +129,7 @@ export default function NewSessionPage() {
                   onChange={(e) => setTrigger(e.target.value)}
                   placeholder="例如：一支笔，水杯"
                   maxLength={120}
-                  className="mt-2 h-11 w-full rounded-xl border border-border/90 bg-page px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="mt-2 h-11 w-full rounded-2xl bg-page px-3 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink"
                 />
               </div>
               <div className="md:col-span-2">
@@ -142,7 +142,7 @@ export default function NewSessionPage() {
                   placeholder={role.moodCustomPlaceholder}
                   maxLength={SESSION_ROLE_MOOD_CUSTOM_MAX}
                   rows={6}
-                  className="mt-2 w-full resize-y rounded-xl border border-border/90 bg-page px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="mt-2 w-full resize-y rounded-2xl bg-page px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink"
                 />
               </div>
             </div>
@@ -155,7 +155,7 @@ export default function NewSessionPage() {
               type="button"
               disabled={isSubmitting}
               onClick={() => void onSubmit()}
-              className="inline-flex h-12 items-center justify-center rounded-2xl bg-accent px-8 text-sm font-semibold text-white shadow-soft-sm outline-none ring-offset-2 ring-offset-page transition hover:bg-accent-hover focus-visible:ring-2 focus-visible:ring-accent disabled:opacity-60"
+              className="ui-btn px-8"
             >
               创建并进入
             </button>

@@ -22,13 +22,13 @@ export function SttToast({ sessionId }: Props) {
 
   return (
     <div className="fixed inset-x-0 bottom-6 z-[60] flex justify-center px-6">
-      <div className="pointer-events-auto w-full max-w-md rounded-xl border border-white/25 bg-black/80 px-4 py-3 text-white shadow-xl backdrop-blur-md">
+      <div className="pointer-events-auto w-full max-w-md rounded-xl bg-black/80 px-4 py-3 text-white shadow-xl backdrop-blur-md">
         <div className="text-sm font-semibold">{stt.toastFailTitle}</div>
         <div className="mt-1 text-sm text-white/85">{stt.toastFailBody}</div>
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-accent px-4 text-sm font-semibold text-white hover:bg-accent-hover"
+            className="ui-btn ui-btn-equal ui-btn-surface px-4 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
             onClick={() => {
               void (async () => {
                 if (failedTakeId) {
@@ -43,7 +43,7 @@ export function SttToast({ sessionId }: Props) {
           </button>
           <button
             type="button"
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-white/30 bg-white/10 px-4 text-sm font-semibold text-white hover:bg-white/15"
+            className="ui-btn ui-btn-equal ui-btn-surface px-4 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
             onClick={() => setOpen(false)}
           >
             {stt.toastDismiss}

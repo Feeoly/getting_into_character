@@ -75,11 +75,11 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
   const takeIdForLink = job?.takeId;
 
   return (
-    <div className="rounded-lg border border-border/80 bg-white px-6 py-5">
+    <div className="rounded-[var(--radius-card)] bg-surface px-6 py-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="text-sm font-semibold text-ink">{stt.sectionTitle}</div>
         {job ? (
-          <span className="inline-flex min-h-7 items-center rounded-full border border-border/80 bg-card-tan/20 px-3 text-xs font-semibold text-ink-muted">
+          <span className="inline-flex min-h-7 items-center rounded-full bg-page px-3 text-xs font-semibold text-ink-muted">
             {statusLabel(job.status)}
           </span>
         ) : null}
@@ -93,8 +93,8 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
       ) : job.status === "queued" || job.status === "processing" ? (
         <div className="mt-3 space-y-2">
           <div className="text-sm text-ink-muted">{stt.summaryLoading}</div>
-          <div className="h-1 w-full overflow-hidden rounded-full bg-stone-200/50">
-            <div className="h-full w-1/3 animate-pulse rounded-full bg-accent/40" />
+          <div className="h-1 w-full overflow-hidden rounded-full bg-ink/10">
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-ink/25" />
           </div>
         </div>
       ) : job.status === "failed" ? (
@@ -105,7 +105,7 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
           ) : null}
           <button
             type="button"
-            className="text-sm font-semibold text-link underline-offset-2 hover:underline"
+            className="ui-btn ui-btn-sm ui-btn-equal"
             onClick={() => {
               setRetryHint(null);
               void (async () => {
@@ -119,7 +119,7 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
           </button>
           <Link
             href={`/session/${sessionId}/review/${job.takeId}`}
-            className="mt-2 inline-flex text-sm font-semibold text-link underline-offset-2 hover:underline"
+            className="ui-btn ui-btn-sm ui-btn-equal mt-2 inline-flex"
           >
             {review.openReview}
           </Link>
@@ -135,13 +135,13 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               <Link
                 href={`/session/${sessionId}/transcript/${takeIdForLink}`}
-                className="inline-flex text-sm font-semibold text-link underline-offset-2 hover:underline"
+                className="ui-btn ui-btn-sm ui-btn-equal inline-flex"
               >
                 {stt.viewFull}
               </Link>
               <Link
                 href={`/session/${sessionId}/review/${takeIdForLink}`}
-                className="inline-flex text-sm font-semibold text-link underline-offset-2 hover:underline"
+                className="ui-btn ui-btn-sm ui-btn-equal inline-flex"
               >
                 {review.openReview}
               </Link>

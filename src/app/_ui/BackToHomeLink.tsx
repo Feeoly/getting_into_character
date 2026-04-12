@@ -1,18 +1,32 @@
 import Link from "next/link";
 
 const defaultClass =
-  "text-sm font-semibold text-link hover:text-ink hover:underline outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-page rounded";
+  "ui-btn ui-btn-sm !no-underline hover:!no-underline focus-visible:!shadow-[0_0_0_2px_var(--color-page),0_0_0_4px_var(--color-ink)]";
+
+const toolbarClass =
+  "ui-btn ui-btn-equal !no-underline hover:!no-underline focus-visible:!shadow-[0_0_0_2px_var(--color-page),0_0_0_4px_var(--color-ink)]";
 
 const onDarkClass =
-  "text-sm font-semibold text-white/90 hover:text-white hover:underline outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded drop-shadow-sm";
+  "ui-btn ui-btn-sm ui-btn-surface !no-underline hover:!no-underline focus-visible:!shadow-[0_0_0_2px_rgb(0_0_0/0.5),0_0_0_4px_var(--color-page)]";
+
+const onDarkToolbarClass =
+  "ui-btn ui-btn-equal ui-btn-surface !no-underline hover:!no-underline focus-visible:!shadow-[0_0_0_2px_rgb(0_0_0/0.5),0_0_0_4px_var(--color-page)]";
 
 type Props = {
-  variant?: "default" | "onDark";
+  variant?: "default" | "toolbar" | "onDark" | "onDarkToolbar";
 };
 
 export function BackToHomeLink({ variant = "default" }: Props) {
+  const cls =
+    variant === "onDarkToolbar"
+      ? onDarkToolbarClass
+      : variant === "onDark"
+        ? onDarkClass
+        : variant === "toolbar"
+          ? toolbarClass
+          : defaultClass;
   return (
-    <Link href="/" className={variant === "onDark" ? onDarkClass : defaultClass}>
+    <Link href="/" className={cls}>
       返回首页
     </Link>
   );

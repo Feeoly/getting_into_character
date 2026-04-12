@@ -11,6 +11,7 @@ import type {
   TranscriptSegmentRow,
 } from "../session/[id]/rehearsal/_lib/transcription/transcriptionTypes";
 
+/** 新库名：不兼容旧版 IndexedDB 数据 */
 export class AppDB extends Dexie {
   sessions!: Table<Session, string>;
   rehearsalSettings!: Table<RehearsalSettingsRow, string>;
@@ -20,50 +21,10 @@ export class AppDB extends Dexie {
   transcriptSegments!: Table<TranscriptSegmentRow, string>;
 
   constructor() {
-    super("gic-db");
+    super("gic-db-v2");
 
     this.version(1).stores({
-      sessions: "id, createdAt, status, scene",
-    });
-
-    this.version(2).stores({
-      sessions: "id, createdAt, status, scene",
-      rehearsalSettings: "sessionId, updatedAt",
-      uploadedBackgrounds: "id, createdAt",
-    });
-
-    this.version(3).stores({
-      sessions: "id, createdAt, status, scene",
-      rehearsalSettings: "sessionId, updatedAt",
-      uploadedBackgrounds: "id, createdAt",
-      pauseEvents: "id, sessionId, start_ms, createdAt",
-    });
-
-    this.version(4).stores({
-      sessions: "id, createdAt, status, scene",
-      rehearsalSettings: "sessionId, updatedAt",
-      uploadedBackgrounds: "id, createdAt",
-      pauseEvents: "id, sessionId, start_ms, createdAt",
-      transcriptionJobs:
-        "id, sessionId, takeId, status, createdAt, [sessionId+createdAt]",
-      transcriptSegments:
-        "id, jobId, sessionId, takeId, start_ms, [sessionId+start_ms]",
-    });
-
-    this.version(5).stores({
-      sessions: "id, createdAt, status, scene",
-      rehearsalSettings: "sessionId, updatedAt",
-      uploadedBackgrounds: "id, createdAt",
-      pauseEvents:
-        "id, sessionId, takeId, start_ms, createdAt, [sessionId+takeId]",
-      transcriptionJobs:
-        "id, sessionId, takeId, status, createdAt, [sessionId+createdAt]",
-      transcriptSegments:
-        "id, jobId, sessionId, takeId, start_ms, [sessionId+start_ms]",
-    });
-
-    this.version(6).stores({
-      sessions: "id, createdAt, status, scene",
+      sessions: "id, createdAt, scene",
       rehearsalSettings: "sessionId, updatedAt",
       uploadedBackgrounds: "id, createdAt",
       pauseEvents:
@@ -77,4 +38,3 @@ export class AppDB extends Dexie {
 }
 
 export const db = new AppDB();
-

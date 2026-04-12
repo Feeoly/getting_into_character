@@ -69,7 +69,8 @@ export const PAUSE_EVENT_SCHEMA = z.object({
   duration_ms: z.number().int().nonnegative(),
   threshold_ms: z.number().int().nonnegative(),
   prompt_shown: z.boolean(),
-  session_status: z.enum(["not_started", "in_progress", "ended"]),
+  /** 旧版会话状态已移除；新事件固定为 active */
+  session_status: z.literal("active"),
   createdAt: z.number().int().nonnegative(),
 });
 

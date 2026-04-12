@@ -300,7 +300,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
               内容默认保存在本地，不会上传。背景铺满全屏，预览在底部中间。
             </div>
             {session?.roleTrigger ? (
-              <div className="mt-2 max-w-lg rounded-lg border border-white/25 bg-black/35 px-3 py-2 text-xs text-white/90 shadow-sm backdrop-blur-md">
+              <div className="mt-2 max-w-lg rounded-lg bg-black/35 px-3 py-2 text-xs text-white/90 shadow-sm backdrop-blur-md">
                 <span className="font-semibold">{roleCopy.rehearsalBanner}：</span>
                 {session.roleMoodPreset ? ROLE_MOOD_LABELS[session.roleMoodPreset] : null}
                 {session.roleMoodCustom
@@ -312,17 +312,17 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
           </div>
 
           <div className="flex shrink-0 flex-wrap justify-end gap-2">
-            <BackToHomeLink variant="onDark" />
+            <BackToHomeLink variant="onDarkToolbar" />
             <Link
               href={`/session/${id}`}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-white/40 bg-white/10 px-4 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 ring-offset-slate-900 backdrop-blur transition hover:bg-white/20 focus-visible:ring-2 focus-visible:ring-white"
+              className="ui-btn ui-btn-equal ui-btn-surface px-4 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
             >
               返回会话
             </Link>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-white/90 px-4 text-sm font-semibold text-ink shadow-sm outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-accent"
+              className="ui-btn ui-btn-equal ui-btn-surface px-4 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
             >
               设置
             </button>
@@ -332,7 +332,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
         <div className="mt-6 flex flex-1 flex-col justify-end">
           <div className="mx-auto w-full max-w-3xl space-y-4">
             {notFound ? (
-              <div className="rounded-2xl border border-white/20 bg-white/95 px-6 py-8 text-ink shadow-xl backdrop-blur">
+              <div className="rounded-[var(--radius-card)] bg-page px-6 py-8 text-ink">
                 <div className="text-sm font-semibold">会话不存在</div>
                 <div className="mt-2 text-sm text-ink-muted">
                   可能已被清理，或链接有误。
@@ -343,7 +343,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
               </div>
             ) : session && settings ? (
               <>
-                <div className="rounded-2xl border border-white/25 bg-black/40 px-5 py-4 shadow-lg backdrop-blur-md">
+                <div className="rounded-2xl bg-black/40 px-5 py-4 shadow-lg backdrop-blur-md">
                   <div className="text-sm font-semibold">
                     {session.name ? `会话：${session.name}` : "会话已加载"}
                   </div>
@@ -397,7 +397,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
 
       {modelLoading ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center px-4">
-          <div className="max-w-lg rounded-lg border border-white/25 bg-black/55 px-4 py-2 text-center text-sm text-white shadow-lg backdrop-blur-md">
+          <div className="max-w-lg rounded-lg bg-black/55 px-4 py-2 text-center text-sm text-white shadow-lg backdrop-blur-md">
             <div className="font-semibold">{stt.initModel}</div>
             <div className="mt-1 text-xs text-white/80">{stt.initModelSub}</div>
           </div>

@@ -36,7 +36,6 @@ export function previewSnippet(text: string, max = 140): string {
 /** Phase 4 复盘页文案（04-UI-SPEC） */
 export const review = {
   pageTitle: "复盘",
-  subtitleHint: "转写与停顿保存在本浏览器；导出、删除与 AI 摘要仅作用于本机，录音文件不会上传。",
   openReview: "进入复盘",
   segmentJump: "跳转播放",
   pauseSectionTitle: "停顿记录",
@@ -57,15 +56,12 @@ export const review = {
 
 export const ai = {
   sectionTitle: "AI 复盘",
-  disclosure:
-    "点击「发送」后，会将下方摘要中的文字发到百炼（OpenAI 兼容接口）生成建议；音频仍在本地，不会上传。",
   inputPlaceholder: "可写题目、答题要点、追问…",
   send: "发送",
   loading: "正在输出…",
-  chatEmpty: "输入后发送，建议会逐字流式显示（视模型与网络而定）。",
   error: "请求失败，请检查网络、模型名与 .env 配置后重试。",
   consentRequired: "请先勾选同意说明，再使用 AI 复盘。",
   consentLabel:
-    "我同意仅向模型服务发送本页提供的文字摘要（转写/停顿摘录与我的输入），不上传录音文件。",
+    "我同意仅向模型服务发送本页提供的文字摘要（转写/停顿摘录与我的输入），不上传录音文件",
   configError: "未配置 AI：请在 .env.local 设置 BAILIAN_BASE_URL 与 BAILIAN_API_KEY。",
 } as const;

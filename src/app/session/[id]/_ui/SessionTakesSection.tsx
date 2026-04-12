@@ -64,9 +64,11 @@ export function SessionTakesSection({ sessionId }: Props) {
 
   const total = takes.length;
 
+  const shellClass = "rounded-[var(--radius-card)] bg-surface px-5 py-5 sm:px-6";
+
   if (total === 0) {
     return (
-      <div className="rounded-lg border border-border/80 bg-white px-6 py-5">
+      <div className={shellClass}>
         <div className="text-sm font-semibold text-ink">排练记录</div>
         <p className="mt-2 text-sm text-ink-muted">
           每次进入排练并保存的录音会出现在此，可分别转写与复盘；可多次排练，记录均保留。
@@ -77,33 +79,31 @@ export function SessionTakesSection({ sessionId }: Props) {
   }
 
   return (
-    <div className="rounded-lg border border-border/80 bg-white px-6 py-5">
+    <div className={shellClass}>
       <div className="text-sm font-semibold text-ink">排练记录</div>
       <p className="mt-1 text-sm text-ink-muted">
-        每轮录音独立保留；下方从新到旧排列，可进入转写或复盘。
+        每轮录音独立保留；从新到旧排列，可进入转写或复盘。
       </p>
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-4 flex flex-col gap-3">
         {takes.map((row, i) => {
           const n = total - i;
           const j = row.latestJob;
           return (
             <li
               key={row.takeId}
-              className="flex flex-col gap-2 rounded-lg border border-border/60 bg-card-tan/25 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+              className="w-full rounded-2xl border-2 border-soft-border bg-page px-4 py-4"
             >
-              <div>
-                <div className="text-sm font-semibold text-ink">
-                  第 {n} 轮 · {formatWhen(j.createdAt)}
-                </div>
-                <div className="mt-1 text-xs text-ink-muted">
-                  <span className="font-medium text-ink-muted">{jobStatusLabel(j.status)}</span>
-                </div>
+              <div className="text-sm font-semibold leading-snug text-ink">
+                第 {n} 轮 · {formatWhen(j.createdAt)}
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="mt-2 text-xs text-ink-muted">
+                <span className="font-medium">{jobStatusLabel(j.status)}</span>
+              </div>
+              <div className="mt-4 flex flex-row flex-wrap items-center gap-2 pt-3">
                 {j.status === "failed" ? (
                   <button
                     type="button"
-                    className="text-xs font-semibold text-link hover:underline"
+                    className="ui-btn ui-btn-sm ui-btn-equal"
                     onClick={() =>
                       void (async () => {
                         await retryTranscriptionForTake(sessionId, row.takeId);
@@ -118,13 +118,13 @@ export function SessionTakesSection({ sessionId }: Props) {
                   <>
                     <Link
                       href={`/session/${sessionId}/transcript/${row.takeId}`}
-                      className="text-xs font-semibold text-ink-muted hover:underline"
+                      className="ui-btn ui-btn-sm ui-btn-equal"
                     >
                       查看转写
                     </Link>
                     <Link
                       href={`/session/${sessionId}/review/${row.takeId}`}
-                      className="text-xs font-semibold text-link hover:underline"
+                      className="ui-btn ui-btn-sm ui-btn-equal"
                     >
                       {review.openReview}
                     </Link>

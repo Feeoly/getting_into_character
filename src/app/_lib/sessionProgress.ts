@@ -19,13 +19,14 @@ const primaryLabel: Record<SessionPrimaryProgress, string> = {
   done: "已完成",
 };
 
+/** 会话页/列表：进度徽章统一中性底，避免多色块 */
 const primaryClass: Record<SessionPrimaryProgress, string> = {
-  pending_role: "bg-accent-muted text-link",
-  pending_read: "bg-card-peach/70 text-ink",
-  pending_rehearsal: "bg-card-sage/80 text-ink",
-  pending_transcribe: "bg-card-lavender/70 text-ink",
-  pending_review: "bg-card-tan/70 text-ink",
-  done: "bg-emerald-100/90 text-emerald-900",
+  pending_role: "bg-page text-ink-muted",
+  pending_read: "bg-page text-ink-muted",
+  pending_rehearsal: "bg-page text-ink-muted",
+  pending_transcribe: "bg-page text-ink-muted",
+  pending_review: "bg-page text-ink-muted",
+  done: "bg-page text-ink-muted",
 };
 
 /**

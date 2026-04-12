@@ -18,7 +18,6 @@ export const role = {
   collapse: "收起",
   expand: "展开",
   readPageTitle: "朗读角色卡",
-  readPageHint: "请大声朗读全文，把状态读进身体里。",
   backToSession: "返回会话",
   listenOnce: "听一遍",
   listenUnsupported: "当前浏览器不支持语音朗读。",

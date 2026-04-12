@@ -37,7 +37,7 @@ function pauseLabel(e: PauseEvent): string {
 const takeIdSchema = z.string().uuid();
 
 function buildMarkdown(session: Session | null, segments: TranscriptSegmentRow[], pauses: PauseEvent[]): string {
-  const title = session?.name ?? "排练会话";
+  const title = session?.name ?? "打板录制会话";
   const lines: string[] = [`# ${title}`, "", "## 转写", ""];
   for (const s of segments) {
     lines.push(`- **${fmt(s.start_ms)}** ${s.text || "（无文本）"}`);
@@ -49,7 +49,7 @@ function buildMarkdown(session: Session | null, segments: TranscriptSegmentRow[]
 }
 
 function buildTxt(session: Session | null, segments: TranscriptSegmentRow[], pauses: PauseEvent[]): string {
-  const title = session?.name ?? "排练会话";
+  const title = session?.name ?? "打板录制会话";
   const lines: string[] = [`${title}`, "", "— 转写 —", ""];
   for (const s of segments) {
     lines.push(`${fmt(s.start_ms)}\t${s.text || "（无文本）"}`);
@@ -193,11 +193,11 @@ export default function ReviewPage({
 
   if (badTake) {
     return (
-      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-3xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+      <main className="min-h-dvh px-6 py-8 md:px-12 md:py-12">
+        <div className="mx-auto max-w-3xl rounded-[var(--radius-card)] bg-surface px-6 py-8">
           <div className="text-sm font-semibold text-ink">链接无效</div>
           <div className="mt-2 text-sm text-ink-muted">复盘轮次标识不正确。</div>
-          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-link">
+          <Link href="/" className="ui-btn ui-btn-sm mt-4 inline-flex">
             返回首页
           </Link>
         </div>
@@ -207,10 +207,10 @@ export default function ReviewPage({
 
   if (notFound) {
     return (
-      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-3xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+      <main className="min-h-dvh px-6 py-8 md:px-12 md:py-12">
+        <div className="mx-auto max-w-3xl rounded-[var(--radius-card)] bg-surface px-6 py-8">
           <div className="text-sm font-semibold text-ink">会话不存在</div>
-          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-link">
+          <Link href="/" className="ui-btn ui-btn-sm mt-4 inline-flex">
             返回首页
           </Link>
         </div>
@@ -221,40 +221,20 @@ export default function ReviewPage({
   const suggestedBase = `gic-review-${id.slice(0, 8)}-${takeId.slice(0, 8)}`;
 
   return (
-    <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
-      <div className="mx-auto max-w-6xl">
-        <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border/80 pb-4">
-          <div>
+    <main className="min-h-dvh px-6 py-8 md:px-12 md:py-12">
+      <div className="mx-auto max-w-4xl">
+        <header className="flex items-start gap-4 pb-4">
+          <div className="min-w-0 flex-1">
             <h1 className="text-[20px] font-semibold leading-[1.2] text-ink">{review.pageTitle}</h1>
-            <p className="mt-1 text-sm text-ink-subtle">{review.subtitleHint}</p>
-            <p className="mt-1 text-xs text-ink-subtle">{stt.fullPageHint}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <BackToHomeLink />
-            <button
-              type="button"
-              onClick={() =>
-                void downloadTextFile(buildMarkdown(session, segments, pauses), suggestedBase, "md")
-              }
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
-            >
-              {review.exportMd}
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                void downloadTextFile(buildTxt(session, segments, pauses), suggestedBase, "txt")
-              }
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
-            >
-              {review.exportTxt}
-            </button>
-            <Link
-              href={`/session/${id}`}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
-            >
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+            <BackToHomeLink variant="toolbar" />
+            <Link href={`/session/${id}`} className="ui-btn ui-btn-equal px-4">
               {review.backToSession}
             </Link>
+            <button type="button" onClick={onDeleteTake} className="ui-btn ui-btn-equal px-4">
+              {review.deleteTake}
+            </button>
           </div>
         </header>
 
@@ -268,7 +248,7 @@ export default function ReviewPage({
                   ref={(el) => {
                     mediaRef.current = el;
                   }}
-                  className="w-full rounded-lg border border-border/80 bg-black"
+                  className="w-full rounded-2xl bg-black"
                   src={mediaUrl}
                   controls
                   playsInline
@@ -295,23 +275,22 @@ export default function ReviewPage({
                 />
               ) : null}
 
-              <div className="rounded-lg border border-border/80 bg-surface px-4 py-4 shadow-sm md:px-6 md:py-5">
+              <div className="rounded-[var(--radius-card)] bg-surface px-4 py-4 md:px-6 md:py-5">
                 <h2 className="text-sm font-semibold text-ink">{review.transcriptSection}</h2>
                 {segments.length === 0 ? (
                   <p className="mt-3 text-sm text-ink-muted">{stt.emptyFull}</p>
                 ) : (
                   <ul className="mt-3 space-y-2">
-                    {segments.map((s, i) => (
+                    {segments.map((s) => (
                       <li key={s.id}>
-                        {i > 0 ? <div className="mb-2 h-1 w-full rounded-full bg-border/80" /> : null}
                         <button
                           type="button"
                           onClick={() => seekTo(s.start_ms)}
                           disabled={!mediaUrl}
                           aria-label={mediaUrl ? review.segmentJump : undefined}
-                          className={`flex w-full gap-3 rounded-md text-left ${
-                            mediaUrl ? "cursor-pointer hover:bg-accent-muted/40" : ""
-                          } ${activeSegId === s.id ? "bg-accent-muted/50" : ""}`}
+                          className={`flex w-full gap-3 rounded-xl text-left ${
+                            mediaUrl ? "cursor-pointer hover:bg-ink/5" : ""
+                          } ${activeSegId === s.id ? "bg-ink/8" : ""}`}
                         >
                           <div className="w-[4.5rem] shrink-0 pt-0.5 text-sm font-semibold tabular-nums text-ink-subtle">
                             {fmt(s.start_ms)}
@@ -327,8 +306,8 @@ export default function ReviewPage({
               </div>
             </div>
 
-            <aside className="w-full shrink-0 space-y-4 lg:w-[340px]">
-              <div className="rounded-lg border border-border/80 bg-card-tan/20 px-4 py-4 shadow-sm">
+            <aside className="w-full shrink-0 space-y-4 lg:w-[min(100%,280px)]">
+              <div className="rounded-[var(--radius-card)] bg-page px-4 py-4">
                 <h2 className="text-sm font-semibold text-ink">{review.pauseSectionTitle}</h2>
                 {pauses.length === 0 ? (
                   <p className="mt-2 text-sm text-ink-muted">{review.noPauses}</p>
@@ -340,8 +319,8 @@ export default function ReviewPage({
                           type="button"
                           onClick={() => seekTo(p.start_ms)}
                           disabled={!mediaUrl}
-                          className={`w-full rounded-md px-2 py-2 text-left text-sm text-ink ${
-                            mediaUrl ? "hover:bg-accent-muted/40" : ""
+                          className={`w-full rounded-xl px-2 py-2 text-left text-sm text-ink ${
+                            mediaUrl ? "hover:bg-ink/5" : ""
                           }`}
                         >
                           {pauseLabel(p)}
@@ -352,23 +331,38 @@ export default function ReviewPage({
                 )}
               </div>
 
+              <div className="rounded-[var(--radius-card)] bg-page px-4 py-3">
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void downloadTextFile(
+                        buildMarkdown(session, segments, pauses),
+                        suggestedBase,
+                        "md",
+                      )
+                    }
+                    className="ui-btn ui-btn-sm px-3"
+                  >
+                    {review.exportMd}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void downloadTextFile(buildTxt(session, segments, pauses), suggestedBase, "txt")
+                    }
+                    className="ui-btn ui-btn-sm px-3"
+                  >
+                    {review.exportTxt}
+                  </button>
+                </div>
+              </div>
+
               <ReviewChat transcriptExcerpt={transcriptExcerpt} pausesExcerpt={pausesExcerpt} />
             </aside>
           </div>
         )}
 
-        {session ? (
-          <div className="mt-8 border-t border-border/80 pt-6">
-            <p className="text-sm font-semibold text-ink">{review.dangerZone}</p>
-            <button
-              type="button"
-              onClick={onDeleteTake}
-              className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-300 bg-surface px-4 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50"
-            >
-              {review.deleteTake}
-            </button>
-          </div>
-        ) : null}
       </div>
     </main>
   );

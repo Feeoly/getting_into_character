@@ -15,7 +15,7 @@ type Props = {
 export function PrimaryProgressBadge({ session, latestJob }: Props) {
   if (latestJob === undefined) {
     return (
-      <span className="inline-flex items-center rounded-full bg-stone-200/60 px-2.5 py-1 text-xs font-semibold text-ink-subtle">
+      <span className="inline-flex items-center rounded-full bg-page px-2.5 py-1 text-xs font-semibold text-ink-muted">
         …
       </span>
     );

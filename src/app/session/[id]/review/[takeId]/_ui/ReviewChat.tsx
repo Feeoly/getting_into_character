@@ -166,16 +166,15 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
   }
 
   return (
-    <section className="rounded-2xl border border-border/80 bg-surface p-4 shadow-soft-sm md:p-5">
+    <section className="rounded-[var(--radius-card)] bg-surface p-4 md:p-5">
       <h2 className="text-sm font-semibold text-ink">{ai.sectionTitle}</h2>
-      <p className="mt-1 text-xs text-ink-subtle">{ai.disclosure}</p>
 
       <label className="mt-3 flex cursor-pointer items-start gap-2">
         <input
           type="checkbox"
           checked={consent}
           onChange={(e) => persistConsent(e.target.checked)}
-          className="mt-1 h-4 w-4 shrink-0 rounded border-border"
+          className="mt-1 h-4 w-4 shrink-0 rounded accent-ink"
         />
         <span className="text-sm text-ink-muted">{ai.consentLabel}</span>
       </label>
@@ -183,10 +182,7 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
         <p className="mt-2 text-xs text-amber-800">{ai.consentRequired}</p>
       ) : null}
 
-      <div className="mt-4 max-h-[50vh] min-h-[200px] space-y-3 overflow-y-auto rounded-md border border-border/60 bg-card-tan/25 p-3">
-        {messages.length === 0 && !loading ? (
-          <p className="text-sm text-ink-subtle">{ai.chatEmpty}</p>
-        ) : null}
+      <div className="mt-4 max-h-[min(70vh,36rem)] min-h-[min(42vh,22rem)] space-y-3 overflow-y-auto rounded-2xl bg-page p-3">
         {messages.map((m, i) =>
           m.role === "user" ? (
             <div key={i} className="flex justify-end">
@@ -196,7 +192,7 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
             </div>
           ) : (
             <div key={i} className="flex justify-start">
-              <div className="max-w-[85%] rounded-lg border border-border/80 bg-surface px-3 py-2 text-sm leading-relaxed text-ink">
+              <div className="max-w-[85%] rounded-2xl bg-surface px-3 py-2 text-sm leading-relaxed text-ink">
                 {m.content || (i === messages.length - 1 ? ai.loading : "")}
               </div>
             </div>
@@ -217,16 +213,16 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={ai.inputPlaceholder}
-            rows={2}
+            rows={4}
             disabled={loading || !consent}
-            className="w-full resize-y rounded-lg border border-border px-3 py-2 text-sm text-ink outline-none focus:border-accent disabled:bg-stone-200/50"
+            className="w-full resize-y rounded-2xl bg-page px-3 py-2 text-sm text-ink outline-none focus-visible:ring-2 focus-visible:ring-ink disabled:bg-ink/5"
           />
         </label>
         <button
           type="button"
           onClick={() => void onSend()}
           disabled={loading || !consent || !input.trim()}
-          className="inline-flex h-11 shrink-0 items-center justify-center rounded-lg bg-accent px-5 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover disabled:pointer-events-none disabled:opacity-50"
+          className="ui-btn shrink-0 px-5"
         >
           {ai.send}
         </button>

@@ -88,18 +88,29 @@ export default function SessionDetailPage({
 
   return (
     <main className="px-6 py-8 md:px-12 md:py-12">
-      <div className="mx-auto max-w-3xl">
-        <BackToHomeLink />
-        <h1 className="mt-3 text-[22px] font-semibold leading-[1.25] text-ink">
-          会话
-        </h1>
-        <p className="mt-2 text-sm text-ink-muted">
-          先朗读角色卡，再进入排练；可多次录制，每轮在下方单独查看转写与复盘。
-        </p>
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+          <h1 className="min-w-0 shrink-0 text-[22px] font-semibold leading-[1.25] text-ink">
+            会话
+          </h1>
+          <div className="flex min-w-0 flex-1 flex-col items-stretch gap-3 sm:max-w-xl sm:items-end">
+            <p className="text-sm leading-snug text-ink-muted sm:text-right">
+              先朗读角色卡，再打板录制，可多次打板录制，每轮打板记录都会被记录和复盘
+            </p>
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+              <BackToHomeLink />
+              {session ? (
+                <button type="button" onClick={onDeleteSession} className="ui-btn ui-btn-sm px-4">
+                  {review.deleteSession}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
 
         <div className="mt-8 space-y-6">
           {notFound ? (
-            <div className="rounded-2xl border border-border/80 bg-surface px-6 py-8 shadow-soft-sm">
+            <div className="rounded-[var(--radius-card)] bg-surface px-6 py-8">
               <div className="text-sm font-semibold text-ink">会话不存在</div>
               <div className="mt-2 text-sm text-ink-muted">
                 可能已被清理，或链接有误。
@@ -109,11 +120,16 @@ export default function SessionDetailPage({
             <>
               <SessionMeta session={session} latestJob={latestJob} />
 
-              <RoleCardReadOnly session={session} sessionId={session.id} onSessionChange={setSession} />
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-8">
+                <div className="min-w-0 w-full lg:basis-0 lg:flex-[3]">
+                  <RoleCardReadOnly session={session} sessionId={session.id} onSessionChange={setSession} />
+                </div>
+                <div className="min-w-0 w-full lg:basis-0 lg:flex-[1]">
+                  <SessionTakesSection sessionId={session.id} />
+                </div>
+              </div>
 
-              <SessionTakesSection sessionId={session.id} />
-
-              <div className="rounded-2xl border border-accent/25 bg-accent-muted/80 px-6 py-5 shadow-soft-sm">
+              <div className="rounded-[var(--radius-card)] bg-surface px-6 py-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-ink">排练</div>
@@ -121,26 +137,10 @@ export default function SessionDetailPage({
                       进入排练室开始新的录制；结束后录音与转写会出现在「排练记录」中。
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={onEnterRehearsal}
-                    className="inline-flex h-11 shrink-0 items-center justify-center rounded-2xl bg-accent px-6 text-sm font-semibold text-white shadow-soft-sm outline-none ring-offset-2 ring-offset-page transition hover:bg-accent-hover focus-visible:ring-2 focus-visible:ring-accent"
-                  >
+                  <button type="button" onClick={onEnterRehearsal} className="ui-btn shrink-0 px-6">
                     进入排练
                   </button>
                 </div>
-              </div>
-
-              <div className="rounded-2xl border border-red-200/80 bg-red-50/70 px-6 py-5 shadow-soft-sm">
-                <div className="text-sm font-semibold text-red-900">{review.dangerZone}</div>
-                <p className="mt-2 text-sm text-red-900/90">{review.deleteSession}</p>
-                <button
-                  type="button"
-                  onClick={onDeleteSession}
-                  className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-400 bg-white px-4 text-sm font-semibold text-red-800 shadow-sm hover:bg-red-100"
-                >
-                  {review.deleteSession}
-                </button>
               </div>
             </>
           ) : (

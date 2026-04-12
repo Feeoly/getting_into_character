@@ -6,11 +6,11 @@ import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import type { Components } from "react-markdown";
 
-/** 与参考图一致：奶油内区 + 炭灰正文 + 金棕链接 */
-const cream = "bg-[#F7F3EE]";
-const body = "text-[#333333]";
+/** Marble：奶油内区 + 黑字 + 黑链接 */
+const cream = "bg-page";
+const body = "text-ink";
 const link =
-  "font-medium text-[#c08439] underline decoration-[#c08439]/45 underline-offset-[3px] hover:text-[#a36a2a]";
+  "font-semibold text-ink underline decoration-ink/35 underline-offset-[3px] hover:decoration-ink";
 
 const sanitizeSchema = {
   ...defaultSchema,
@@ -36,11 +36,11 @@ const mdComponents: Components = {
     <p className={`mb-4 text-[15px] leading-[1.75] last:mb-0 ${body}`}>{children}</p>
   ),
   strong: ({ children }) => (
-    <strong className="font-semibold text-[#222222]">{children}</strong>
+    <strong className="font-semibold text-ink">{children}</strong>
   ),
   em: ({ children }) => <em className="italic">{children}</em>,
   hr: () => (
-    <hr className="my-6 w-[92%] max-w-md border-0 border-t border-[#d4cfc4]" role="presentation" />
+    <div className="my-6 h-px w-[92%] max-w-md bg-ink/10" role="presentation" />
   ),
   ul: ({ children }) => (
     <ul className={`mb-4 list-disc space-y-2 pl-6 text-[15px] leading-[1.75] last:mb-0 ${body}`}>
@@ -64,7 +64,7 @@ const mdComponents: Components = {
     </a>
   ),
   blockquote: ({ children }) => (
-    <blockquote className="mb-4 border-l-[3px] border-[#c08439]/50 pl-4 text-[15px] leading-[1.75] text-[#444444]">
+    <blockquote className="mb-4 rounded-lg bg-ink/[0.04] py-2 pl-4 pr-3 text-[15px] leading-[1.75] text-ink-muted">
       {children}
     </blockquote>
   ),
@@ -79,7 +79,7 @@ const mdComponents: Components = {
     }
     return (
       <code
-        className="rounded bg-[#ebe6df] px-1.5 py-0.5 font-mono text-[0.9em] text-[#333333]"
+        className="rounded-md bg-ink/5 px-1.5 py-0.5 font-mono text-[0.9em] text-ink"
         {...props}
       >
         {children}
@@ -87,7 +87,7 @@ const mdComponents: Components = {
     );
   },
   pre: ({ children }) => (
-    <pre className="mb-4 overflow-x-auto rounded-lg bg-[#ebe6df] p-4 text-[14px] leading-relaxed text-[#333333]">
+    <pre className="mb-4 overflow-x-auto rounded-2xl bg-page p-4 text-[14px] leading-relaxed text-ink">
       {children}
     </pre>
   ),
@@ -103,8 +103,8 @@ export function RoleCardMarkdown({ markdown, variant = "compact" }: Props) {
   const src = markdown.trim() || "—";
   const pad =
     variant === "read"
-      ? "rounded-[10px] px-5 py-6 md:px-8 md:py-8"
-      : "rounded-[10px] px-4 py-4 md:px-5 md:py-5";
+      ? "rounded-2xl px-5 py-6 md:px-8 md:py-8"
+      : "rounded-2xl px-4 py-4 md:px-5 md:py-5";
   const scroll = variant === "compact" ? "max-h-[min(60vh,28rem)] overflow-y-auto" : "";
 
   return (
