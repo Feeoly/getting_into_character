@@ -5,6 +5,7 @@
 - [x] **Phase 3: 本地转写管线（可插拔引擎）** - 录后转写为文本并带时间信息，默认不上传
 - [x] **Phase 4: 复盘闭环 + 导出/删除** - 复盘页可基于文本/停顿快速复盘，支持导出与一键清理
 - [x] **Phase 5: 角色卡差异化 + 证据锚定建议** - 角色进入（生成+朗读）；证据锚定以可执行角色卡为主（复盘 AI 见 Phase 4）
+- [ ] **Phase 6: 会话详情页角色卡 AI 优化以增强角色感** - AI 润色/增强呈现，让「角色感」更可感知
 
 ## Phase Details
 
@@ -96,4 +97,22 @@ Plans:
 | 3. 本地转写管线（可插拔引擎） | 3/3 | Complete | 2026-04-11 |
 | 4. 复盘闭环 + 导出/删除 | 3/3 | Complete | 2026-04-11 |
 | 5. 角色卡差异化 + 证据锚定建议 | 2/2 | Complete | 2026-04-11 |
+| 6. 会话详情页角色卡 AI 优化以增强角色感 | 0/2 | Ready to execute | - |
 
+
+### Phase 6: 会话详情页角色卡 AI 优化以增强角色感
+
+**Goal:** 用户在会话详情页可在**明示同意**后，将当前角色卡相关**文本**发往百炼做**润色/增强**，使「角色感」更可感知；本地底稿可保留并与增强稿切换；朗读页与详情展示**同一套「展示稿」**逻辑。
+**Requirements**: ROLE-01, ROLE-02, ROLE-03
+**Depends on:** Phase 5
+**Success Criteria** (what must be TRUE):
+  1. 未勾选同意前，不能使用 AI 增强；同意文案明确仅发送角色相关文字、不上传录音。
+  2. 未配置 `BAILIAN_API_KEY` 时，行为与复盘一致（503 / 可理解提示）。
+  3. 增强结果（或解析后）正文包含与 `roleCopy` 一致的三节标题：**状态描述**、**可执行表达指令**、**禁忌**。
+  4. `/session/[id]/role/read` 朗读与详情区展示的「展示稿」一致（`getEffectiveRoleCardText`）。
+  5. 失败时保留本地稿，IndexedDB 不因请求失败而损坏。
+**Plans:** 2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Session 扩展 + `getEffectiveRoleCardText` + 共享百炼 helper + `POST /api/role/enhance`
+- [ ] 06-02-PLAN.md — `sessionRepo` 写入 AI 稿/偏好；`RoleCardReadOnly` 同意门闸与增强；朗读页用 effective 文本
