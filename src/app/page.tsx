@@ -15,7 +15,6 @@ import {
 
 type HomeSessionRow = {
   session: Session;
-  reviewHref: string | null;
   latestJob: TranscriptionJobRow | null;
 };
 
@@ -32,11 +31,7 @@ export default function Home() {
         const enriched: HomeSessionRow[] = await Promise.all(
           list.map(async (session) => {
             const job = await getLatestJobForSession(session.id);
-            const reviewHref =
-              job?.status === "succeeded"
-                ? `/session/${session.id}/review/${job.takeId}`
-                : null;
-            return { session, reviewHref, latestJob: job };
+            return { session, latestJob: job };
           }),
         );
         if (!cancelled) setRows(enriched);
@@ -121,13 +116,9 @@ export default function Home() {
                   <EmptyState />
                 ) : (
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                    {rows.map(({ session, reviewHref, latestJob }) => (
+                    {rows.map(({ session, latestJob }) => (
                       <div key={session.id} className="min-w-0">
-                        <SessionRow
-                          session={session}
-                          reviewHref={reviewHref}
-                          latestJob={latestJob}
-                        />
+                        <SessionRow session={session} latestJob={latestJob} />
                       </div>
                     ))}
                   </div>

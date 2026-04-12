@@ -90,21 +90,19 @@ export default function SessionDetailPage({
     <main className="px-6 py-8 md:px-12 md:py-12">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <h1 className="min-w-0 shrink-0 text-[22px] font-semibold leading-[1.25] text-ink">
-            会话
-          </h1>
-          <div className="flex min-w-0 flex-1 flex-col items-stretch gap-3 sm:max-w-xl sm:items-end">
-            <p className="text-sm leading-snug text-ink-muted sm:text-right">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[22px] font-semibold leading-[1.25] text-ink">会话</h1>
+            <p className="mt-2 max-w-xl text-sm leading-snug text-ink-muted">
               先朗读角色卡，再打板录制，可多次打板录制，每轮打板记录都会被记录和复盘
             </p>
-            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-              <BackToHomeLink />
-              {session ? (
-                <button type="button" onClick={onDeleteSession} className="ui-btn ui-btn-sm px-4">
-                  {review.deleteSession}
-                </button>
-              ) : null}
-            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
+            <BackToHomeLink />
+            {session ? (
+              <button type="button" onClick={onDeleteSession} className="ui-btn ui-btn-sm px-4">
+                {review.deleteSession}
+              </button>
+            ) : null}
           </div>
         </div>
 

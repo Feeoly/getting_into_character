@@ -86,7 +86,6 @@ export function RecorderPanel({
     try {
       const res = await startRecording({
         cameraEnabled: settings.cameraEnabled,
-        screenShareEnabled: settings.screenShareEnabled,
       });
       setKind(res.kind);
       setMimeType(res.mimeType ?? null);
@@ -107,7 +106,6 @@ export function RecorderPanel({
     onPlaybackChange,
     onRecordingSessionChange,
     settings.cameraEnabled,
-    settings.screenShareEnabled,
   ]);
 
   useEffect(() => {
@@ -139,11 +137,7 @@ export function RecorderPanel({
             {status === "recording" ? (
               <>
                 录制中 · {formatSec(elapsedSec)}（
-                {kind === "video"
-                  ? settings.screenShareEnabled
-                    ? "麦克风 + 屏幕"
-                    : "麦克风 + 摄像头"
-                  : "仅麦克风"}
+                {kind === "video" ? "麦克风 + 摄像头" : "仅麦克风"}
                 ）
               </>
             ) : status === "requesting" ? (
@@ -151,7 +145,7 @@ export function RecorderPanel({
             ) : status === "stopped" ? (
               <>已停止，可回放本次内容</>
             ) : (
-              <>点击开始后才会请求权限（麦克风；若开启摄像头或录屏会额外请求）</>
+              <>点击开始后才会请求权限（麦克风；若开启摄像头会同时请求画面）</>
             )}
           </div>
           {mimeType ? (

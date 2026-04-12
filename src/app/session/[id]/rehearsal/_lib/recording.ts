@@ -2,8 +2,6 @@ export type RecordingKind = "audio" | "video";
 
 export type StartRecordingInput = {
   cameraEnabled: boolean;
-  /** 与 cameraEnabled 互斥；为 true 时使用 getDisplayMedia + 麦克风 */
-  screenShareEnabled?: boolean;
   timesliceMs?: number;
 };
 
@@ -58,8 +56,7 @@ function toRecordingError(err: unknown): RecordingError {
   if (name === "NotAllowedError" || name === "SecurityError") {
     return {
       code: "not_allowed",
-      message:
-        "未获得麦克风/摄像头/屏幕共享权限。若已取消选择窗口，请重新开始；也可在系统设置里允许浏览器录屏后重试。",
+      message: "未获得麦克风或摄像头权限。请在浏览器或系统设置中允许访问后重试。",
       cause: err,
     };
   }
@@ -150,45 +147,14 @@ export async function startRecording(
     } satisfies RecordingError;
   }
 
-  const screenOn = Boolean(input.screenShareEnabled);
-  const cameraOn = Boolean(input.cameraEnabled) && !screenOn;
-  const kind: RecordingKind = screenOn || cameraOn ? "video" : "audio";
+  const cameraOn = Boolean(input.cameraEnabled);
+  const kind: RecordingKind = cameraOn ? "video" : "audio";
 
   try {
-    let stream: MediaStream;
-
-    if (screenOn) {
-      if (typeof navigator.mediaDevices.getDisplayMedia !== "function") {
-        throw toRecordingError(new DOMException("NotSupportedError"));
-      }
-      let display: MediaStream | null = null;
-      try {
-        display = await navigator.mediaDevices.getDisplayMedia({
-          video: true,
-          audio: false,
-        });
-      } catch (e) {
-        throw toRecordingError(e);
-      }
-      try {
-        const mic = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: false,
-        });
-        stream = new MediaStream([
-          ...display.getVideoTracks(),
-          ...mic.getAudioTracks(),
-        ]);
-      } catch (e) {
-        safeStopTracks(display);
-        throw toRecordingError(e);
-      }
-    } else {
-      const constraints: MediaStreamConstraints = cameraOn
-        ? { audio: true, video: true }
-        : { audio: true };
-      stream = await navigator.mediaDevices.getUserMedia(constraints);
-    }
+    const constraints: MediaStreamConstraints = cameraOn
+      ? { audio: true, video: true }
+      : { audio: true };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
     const mimeType = pickBestMimeType(kind);
     const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);

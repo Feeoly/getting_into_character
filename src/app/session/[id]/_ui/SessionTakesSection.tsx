@@ -64,12 +64,14 @@ export function SessionTakesSection({ sessionId }: Props) {
 
   const total = takes.length;
 
-  const shellClass = "rounded-[var(--radius-card)] bg-surface px-5 py-5 sm:px-6";
+  /** 整块高度上限 580px，列表区单独滚动 */
+  const shellClass =
+    "flex min-h-0 max-h-[580px] flex-col rounded-[var(--radius-card)] bg-surface px-5 py-5 sm:px-6";
 
   if (total === 0) {
     return (
       <div className={shellClass}>
-        <div className="text-sm font-semibold text-ink">排练记录</div>
+        <div className="shrink-0 text-sm font-semibold text-ink">排练记录</div>
         <p className="mt-2 text-sm text-ink-muted">
           每次进入排练并保存的录音会出现在此，可分别转写与复盘；可多次排练，记录均保留。
         </p>
@@ -80,59 +82,60 @@ export function SessionTakesSection({ sessionId }: Props) {
 
   return (
     <div className={shellClass}>
-      <div className="text-sm font-semibold text-ink">排练记录</div>
-      <p className="mt-1 text-sm text-ink-muted">
-        每轮录音独立保留；从新到旧排列，可进入转写或复盘。
-      </p>
-      <ul className="mt-4 flex flex-col gap-3">
+      <div className="shrink-0">
+        <div className="text-sm font-semibold text-ink">排练记录</div>
+        <p className="mt-1 text-sm text-ink-muted">
+          每轮录音独立保留；从新到旧排列，可进入转写或复盘。
+        </p>
+      </div>
+      <ul className="mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-y-contain pr-0.5 [-webkit-overflow-scrolling:touch]">
         {takes.map((row, i) => {
           const n = total - i;
           const j = row.latestJob;
           return (
-            <li
-              key={row.takeId}
-              className="w-full rounded-2xl border-2 border-soft-border bg-page px-4 py-4"
-            >
-              <div className="text-sm font-semibold leading-snug text-ink">
-                第 {n} 轮 · {formatWhen(j.createdAt)}
-              </div>
-              <div className="mt-2 text-xs text-ink-muted">
-                <span className="font-medium">{jobStatusLabel(j.status)}</span>
-              </div>
-              <div className="mt-4 flex flex-row flex-wrap items-center gap-2 pt-3">
-                {j.status === "failed" ? (
-                  <button
-                    type="button"
-                    className="ui-btn ui-btn-sm ui-btn-equal"
-                    onClick={() =>
-                      void (async () => {
-                        await retryTranscriptionForTake(sessionId, row.takeId);
-                        setTick((x) => x + 1);
-                      })()
-                    }
-                  >
-                    {stt.inlineRetry}
-                  </button>
-                ) : null}
-                {j.status === "succeeded" ? (
-                  <>
-                    <Link
-                      href={`/session/${sessionId}/transcript/${row.takeId}`}
+            <li key={row.takeId} className="w-full">
+              <div className="rehearsal-take-gradient-border px-4 py-4">
+                <div className="text-sm font-semibold leading-snug text-ink">
+                  第 {n} 轮 · {formatWhen(j.createdAt)}
+                </div>
+                <div className="mt-2 text-xs text-ink-muted">
+                  <span className="font-medium">{jobStatusLabel(j.status)}</span>
+                </div>
+                <div className="mt-4 flex flex-row flex-wrap items-center gap-2 pt-3">
+                  {j.status === "failed" ? (
+                    <button
+                      type="button"
                       className="ui-btn ui-btn-sm ui-btn-equal"
+                      onClick={() =>
+                        void (async () => {
+                          await retryTranscriptionForTake(sessionId, row.takeId);
+                          setTick((x) => x + 1);
+                        })()
+                      }
                     >
-                      查看转写
-                    </Link>
-                    <Link
-                      href={`/session/${sessionId}/review/${row.takeId}`}
-                      className="ui-btn ui-btn-sm ui-btn-equal"
-                    >
-                      {review.openReview}
-                    </Link>
-                  </>
-                ) : null}
-                {(j.status === "queued" || j.status === "processing") && (
-                  <span className="text-xs text-ink-subtle">{stt.summaryLoading}</span>
-                )}
+                      {stt.inlineRetry}
+                    </button>
+                  ) : null}
+                  {j.status === "succeeded" ? (
+                    <>
+                      <Link
+                        href={`/session/${sessionId}/transcript/${row.takeId}`}
+                        className="ui-btn ui-btn-sm ui-btn-equal"
+                      >
+                        查看转写
+                      </Link>
+                      <Link
+                        href={`/session/${sessionId}/review/${row.takeId}`}
+                        className="ui-btn ui-btn-sm ui-btn-equal"
+                      >
+                        {review.openReview}
+                      </Link>
+                    </>
+                  ) : null}
+                  {(j.status === "queued" || j.status === "processing") && (
+                    <span className="text-xs text-ink-subtle">{stt.summaryLoading}</span>
+                  )}
+                </div>
               </div>
             </li>
           );

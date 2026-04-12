@@ -30,7 +30,7 @@ import { createPauseDetector } from "./_lib/pauseDetector";
 import { addPauseEvent } from "./_lib/rehearsalRepo";
 
 function bgImageSrc(presetId: string | undefined): string {
-  if (presetId === "bg-2") return "/rehearsal/backgrounds/bg-2.jpg";
+  if (presetId === "bg-2") return "/rehearsal/backgrounds/bg-2.png";
   return "/rehearsal/backgrounds/bg-1.jpg";
 }
 
@@ -297,7 +297,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
               排练
             </h1>
             <div className="mt-1 max-w-md text-sm text-white/85 drop-shadow-sm">
-              内容默认保存在本地，不会上传。背景铺满全屏，预览在底部中间。
+              内容默认保存在本地，不会上传。背景铺满全屏；会话与录制面板在右下角，预览可拖动。
             </div>
             {session?.roleTrigger ? (
               <div className="mt-2 max-w-lg rounded-lg bg-black/35 px-3 py-2 text-xs text-white/90 shadow-sm backdrop-blur-md">
@@ -329,48 +329,48 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
           </div>
         </div>
 
-        <div className="mt-6 flex flex-1 flex-col justify-end">
-          <div className="mx-auto w-full max-w-3xl space-y-4">
-            {notFound ? (
-              <div className="rounded-[var(--radius-card)] bg-page px-6 py-8 text-ink">
-                <div className="text-sm font-semibold">会话不存在</div>
-                <div className="mt-2 text-sm text-ink-muted">
-                  可能已被清理，或链接有误。
-                </div>
-                <div className="mt-4">
-                  <BackToHomeLink />
-                </div>
+        {notFound ? (
+          <div className="mt-8 flex flex-1 justify-center">
+            <div className="w-full max-w-3xl rounded-[var(--radius-card)] bg-page px-6 py-8 text-ink">
+              <div className="text-sm font-semibold">会话不存在</div>
+              <div className="mt-2 text-sm text-ink-muted">可能已被清理，或链接有误。</div>
+              <div className="mt-4">
+                <BackToHomeLink />
               </div>
-            ) : session && settings ? (
-              <>
-                <div className="rounded-2xl bg-black/40 px-5 py-4 shadow-lg backdrop-blur-md">
-                  <div className="text-sm font-semibold">
-                    {session.name ? `会话：${session.name}` : "会话已加载"}
-                  </div>
-                  <div className="mt-1 text-sm text-white/80">
-                    先打开「设置」选好背景；需要画面时再开启摄像头或录屏。
-                  </div>
-                  {error ? <div className="mt-2 text-sm text-red-300">{error}</div> : null}
-                </div>
+            </div>
+          </div>
+        ) : !session || !settings ? (
+          <div className="mt-8 text-sm text-white/85 drop-shadow-sm">加载中…</div>
+        ) : null}
+      </div>
 
-                <RecorderPanel
-                  sessionId={id}
-                  settings={settings}
-                  liveStream={liveStream}
-                  onLiveStreamChange={setLiveStream}
-                  onPlaybackChange={setPlayback}
-                  onRecordingSessionChange={(s) => {
-                    setRecordingEpochStartMs(s?.epochMs ?? null);
-                    currentRecordingTakeIdRef.current = s?.takeId ?? null;
-                  }}
-                />
-              </>
-            ) : (
-              <div className="text-sm text-white/85 drop-shadow-sm">加载中…</div>
-            )}
+      {session && settings && !notFound ? (
+        <div className="pointer-events-none fixed bottom-5 right-4 z-20 flex w-[min(100vw-2rem,22.5rem)] flex-col gap-3 sm:right-5 md:bottom-6 md:right-8">
+          <div className="pointer-events-auto rounded-2xl bg-black/40 px-5 py-4 shadow-lg backdrop-blur-md">
+            <div className="text-sm font-semibold">
+              {session.name ? `会话：${session.name}` : "会话已加载"}
+            </div>
+            <div className="mt-1 text-sm text-white/80">
+              先打开「设置」选好背景；需要看到自己时再开启摄像头。
+            </div>
+            {error ? <div className="mt-2 text-sm text-red-300">{error}</div> : null}
+          </div>
+
+          <div className="pointer-events-auto">
+            <RecorderPanel
+              sessionId={id}
+              settings={settings}
+              liveStream={liveStream}
+              onLiveStreamChange={setLiveStream}
+              onPlaybackChange={setPlayback}
+              onRecordingSessionChange={(s) => {
+                setRecordingEpochStartMs(s?.epochMs ?? null);
+                currentRecordingTakeIdRef.current = s?.takeId ?? null;
+              }}
+            />
           </div>
         </div>
-      </div>
+      ) : null}
 
       {settings ? (
         <SettingsDrawer

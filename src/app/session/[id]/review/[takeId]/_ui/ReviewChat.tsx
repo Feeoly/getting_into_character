@@ -20,7 +20,7 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     try {
@@ -31,7 +31,9 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
   }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
   const persistConsent = useCallback((v: boolean) => {
@@ -182,7 +184,10 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
         <p className="mt-2 text-xs text-amber-800">{ai.consentRequired}</p>
       ) : null}
 
-      <div className="mt-4 max-h-[min(70vh,36rem)] min-h-[min(42vh,22rem)] space-y-3 overflow-y-auto rounded-2xl bg-page p-3">
+      <div
+        ref={scrollRef}
+        className="mt-4 h-[min(42vh,22rem)] space-y-3 overflow-y-auto overflow-x-hidden rounded-2xl bg-page p-3"
+      >
         {messages.map((m, i) =>
           m.role === "user" ? (
             <div key={i} className="flex justify-end">
@@ -201,7 +206,6 @@ export function ReviewChat({ transcriptExcerpt, pausesExcerpt }: Props) {
         {loading ? (
           <div className="text-sm text-ink-subtle">{ai.loading}</div>
         ) : null}
-        <div ref={bottomRef} />
       </div>
 
       {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}

@@ -63,16 +63,17 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     [liveStream],
   );
 
-  // 首帧与折叠切换：用可见视口算默认「底部居中」，并始终钳在 viewport 内
+  // 首帧与折叠切换：默认「左下角」，与右下角会话/录制面板错开；始终钳在 viewport 内
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
     const pipW = collapsed ? 72 : 280;
     const pipH = collapsed ? 72 : 168;
-    const { w, h, ox, oy } = viewportBox();
+    const { h, ox, oy } = viewportBox();
+    const margin = 8;
     setPos((p) => {
       if (!p) {
         return clampPipPos(
-          Math.round(ox + (w - pipW) / 2),
+          Math.round(ox + margin),
           Math.round(oy + h - pipH - 24),
           pipW,
           pipH,

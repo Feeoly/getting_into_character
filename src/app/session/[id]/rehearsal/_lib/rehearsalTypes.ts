@@ -23,8 +23,6 @@ export const REHEARSAL_SETTINGS_SCHEMA = z.object({
   presetId: z.string().min(1).optional(),
   uploadedBackgroundId: z.string().min(1).optional(),
   cameraEnabled: z.boolean(),
-  /** 窗口/屏幕录制（getDisplayMedia），与摄像头二选一 */
-  screenShareEnabled: z.boolean().default(false),
   updatedAt: z.number().int().nonnegative().optional(),
 });
 
@@ -40,7 +38,6 @@ export function makeDefaultRehearsalSettings(sessionId: string): RehearsalSettin
     backgroundSource: "preset_image",
     presetId: "bg-1",
     cameraEnabled: false,
-    screenShareEnabled: false,
     updatedAt: Date.now(),
   };
 }

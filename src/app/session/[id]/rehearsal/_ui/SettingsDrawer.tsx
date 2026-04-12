@@ -215,49 +215,26 @@ export function SettingsDrawer({
           </section>
 
           <section className="rounded-2xl bg-page p-4">
-            <div className="text-sm font-semibold text-ink">画面来源（二选一）</div>
+            <div className="text-sm font-semibold text-ink">画面来源</div>
             <div className="mt-2 text-sm text-ink-muted">
-              默认仅录麦克风。需要画面时，可选摄像头或屏幕/窗口共享；与另一项互斥。
+              默认仅录麦克风。需要看到自己时，可开启摄像头。
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-4">
               <div className="text-sm text-ink-muted">摄像头</div>
               <button
                 type="button"
-                onClick={() => {
-                  const nextCam = !settings.cameraEnabled;
-                  onChange({
-                    ...settings,
-                    cameraEnabled: nextCam,
-                    screenShareEnabled: nextCam ? false : settings.screenShareEnabled,
-                  });
-                }}
+                onClick={() =>
+                  onChange({ ...settings, cameraEnabled: !settings.cameraEnabled })
+                }
                 className={`ui-btn px-4 ${settings.cameraEnabled ? "ui-btn-on" : ""}`}
               >
                 {settings.cameraEnabled ? "已开启" : "关闭"}
               </button>
             </div>
 
-            <div className="mt-4 flex items-center justify-between gap-4">
-              <div className="text-sm text-ink-muted">录屏（窗口/屏幕）</div>
-              <button
-                type="button"
-                onClick={() => {
-                  const nextScreen = !settings.screenShareEnabled;
-                  onChange({
-                    ...settings,
-                    screenShareEnabled: nextScreen,
-                    cameraEnabled: nextScreen ? false : settings.cameraEnabled,
-                  });
-                }}
-                className={`ui-btn px-4 ${settings.screenShareEnabled ? "ui-btn-on" : ""}`}
-              >
-                {settings.screenShareEnabled ? "已开启" : "关闭"}
-              </button>
-            </div>
-
             <div className="mt-3 text-sm text-ink-muted">
-              点击「开始录制」后才会弹出权限：先选屏幕/窗口（若开启录屏），再允许麦克风。
+              点击「开始录制」后才会请求权限：先麦克风，若已开启摄像头会同时请求画面。
             </div>
           </section>
 
