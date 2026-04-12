@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const defaultClass =
-  "text-sm font-semibold text-blue-600 hover:underline outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 rounded";
+  "text-sm font-semibold text-link hover:text-ink hover:underline outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-page rounded";
 
 const onDarkClass =
   "text-sm font-semibold text-white/90 hover:text-white hover:underline outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded drop-shadow-sm";

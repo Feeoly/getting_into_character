@@ -10,7 +10,7 @@ export function PrimaryButton({ href, children }: Props) {
   return (
     <Link
       href={href}
-      className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600"
+      className="inline-flex h-12 min-w-[8.5rem] items-center justify-center rounded-2xl bg-accent px-8 text-sm font-semibold text-white shadow-soft-sm outline-none ring-offset-2 ring-offset-page transition hover:bg-accent-hover focus-visible:ring-2 focus-visible:ring-accent"
     >
       {children}
     </Link>

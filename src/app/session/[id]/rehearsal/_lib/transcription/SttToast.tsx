@@ -28,7 +28,7 @@ export function SttToast({ sessionId }: Props) {
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-accent px-4 text-sm font-semibold text-white hover:bg-accent-hover"
             onClick={() => {
               void (async () => {
                 if (failedTakeId) {

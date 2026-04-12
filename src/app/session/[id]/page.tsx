@@ -90,18 +90,18 @@ export default function SessionDetailPage({
     <main className="px-6 py-8 md:px-12 md:py-12">
       <div className="mx-auto max-w-3xl">
         <BackToHomeLink />
-        <h1 className="mt-3 text-[22px] font-semibold leading-[1.25] text-slate-900">
+        <h1 className="mt-3 text-[22px] font-semibold leading-[1.25] text-ink">
           会话
         </h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-ink-muted">
           先朗读角色卡，再进入排练；可多次录制，每轮在下方单独查看转写与复盘。
         </p>
 
         <div className="mt-8 space-y-6">
           {notFound ? (
-            <div className="rounded-lg border border-slate-200 bg-white px-6 py-8">
-              <div className="text-sm font-semibold text-slate-900">会话不存在</div>
-              <div className="mt-2 text-sm text-slate-600">
+            <div className="rounded-2xl border border-border/80 bg-surface px-6 py-8 shadow-soft-sm">
+              <div className="text-sm font-semibold text-ink">会话不存在</div>
+              <div className="mt-2 text-sm text-ink-muted">
                 可能已被清理，或链接有误。
               </div>
             </div>
@@ -113,25 +113,25 @@ export default function SessionDetailPage({
 
               <SessionTakesSection sessionId={session.id} />
 
-              <div className="rounded-lg border border-blue-100 bg-blue-50/50 px-6 py-5">
+              <div className="rounded-2xl border border-accent/25 bg-accent-muted/80 px-6 py-5 shadow-soft-sm">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <div className="text-sm font-semibold text-slate-900">排练</div>
-                    <div className="mt-1 text-sm text-slate-600">
+                    <div className="text-sm font-semibold text-ink">排练</div>
+                    <div className="mt-1 text-sm text-ink-muted">
                       进入排练室开始新的录制；结束后录音与转写会出现在「排练记录」中。
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={onEnterRehearsal}
-                    className="inline-flex h-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm outline-none ring-offset-2 transition hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-600"
+                    className="inline-flex h-11 shrink-0 items-center justify-center rounded-2xl bg-accent px-6 text-sm font-semibold text-white shadow-soft-sm outline-none ring-offset-2 ring-offset-page transition hover:bg-accent-hover focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     进入排练
                   </button>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-red-200 bg-red-50/60 px-6 py-5">
+              <div className="rounded-2xl border border-red-200/80 bg-red-50/70 px-6 py-5 shadow-soft-sm">
                 <div className="text-sm font-semibold text-red-900">{review.dangerZone}</div>
                 <p className="mt-2 text-sm text-red-900/90">{review.deleteSession}</p>
                 <button
@@ -144,7 +144,7 @@ export default function SessionDetailPage({
               </div>
             </>
           ) : (
-            <div className="text-sm text-slate-600">加载中…</div>
+            <div className="text-sm text-ink-muted">加载中…</div>
           )}
         </div>
       </div>

@@ -227,7 +227,7 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
         {!collapsed && showPip ? (
           <button
             type="button"
-            className="absolute right-1.5 top-1.5 z-10 inline-flex h-8 items-center justify-center rounded-lg bg-white/90 px-2.5 text-xs font-semibold text-slate-900 outline-none ring-offset-2 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="absolute right-1.5 top-1.5 z-10 inline-flex h-8 items-center justify-center rounded-lg bg-white/90 px-2.5 text-xs font-semibold text-ink outline-none ring-offset-2 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-accent"
             onClick={(e) => {
               e.stopPropagation();
               setCollapsed(true);

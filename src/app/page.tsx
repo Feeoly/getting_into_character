@@ -7,12 +7,17 @@ import type { Session } from "./_lib/sessionTypes";
 import { EmptyState } from "./_ui/EmptyState";
 import { PrimaryButton } from "./_ui/PrimaryButton";
 import { SessionRow } from "./_ui/SessionRow";
+import type { TranscriptionJobRow } from "./session/[id]/rehearsal/_lib/transcription/transcriptionTypes";
 import {
   failStaleProcessingJobs,
   getLatestJobForSession,
 } from "./session/[id]/rehearsal/_lib/transcription/transcriptRepo";
 
-type HomeSessionRow = { session: Session; reviewHref: string | null };
+type HomeSessionRow = {
+  session: Session;
+  reviewHref: string | null;
+  latestJob: TranscriptionJobRow | null;
+};
 
 export default function Home() {
   const [rows, setRows] = useState<HomeSessionRow[] | null>(null);
@@ -31,7 +36,7 @@ export default function Home() {
               job?.status === "succeeded"
                 ? `/session/${session.id}/review/${job.takeId}`
                 : null;
-            return { session, reviewHref };
+            return { session, reviewHref, latestJob: job };
           }),
         );
         if (!cancelled) setRows(enriched);
@@ -47,42 +52,82 @@ export default function Home() {
 
   return (
     <main className="px-6 py-8 md:px-12 md:py-12">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="text-[28px] font-semibold leading-[1.2] text-slate-900">
-          Getting Into Character
-        </h1>
-        <p className="mt-4 max-w-2xl text-[16px] leading-[1.5] text-slate-700">
-          你在扮演角色，不是评价你本人。先把表达交给“角色”，再把紧张留在门外。
+      <div className="mx-auto max-w-6xl">
+        <h1 className="text-[28px] font-semibold leading-[1.2] text-ink">入戏</h1>
+        <p className="mt-4 max-w-2xl text-[16px] leading-[1.5] text-ink-muted">
+          别去“面试”，去“演戏”
         </p>
 
-        <div className="mt-6">
-          <PrimaryButton href="/session/new">开始排练</PrimaryButton>
-          <div className="mt-3 max-w-xl text-sm text-slate-600">
-            内容默认保存在本地，不会上传。
+        <div className="mt-8 flex flex-col gap-10 lg:mt-10 lg:flex-row lg:items-start lg:gap-12">
+          <div className="min-w-0 flex-1 space-y-8 text-[15px] leading-[1.65] text-ink-muted">
+            <section className="space-y-3 rounded-2xl border border-border/80 bg-card-sage/35 p-5 shadow-soft-sm">
+              <h2 className="text-base font-semibold text-ink">背景</h2>
+              <p>
+                《The Rehearsal》第二季曾进行一项实验：让副飞行员化身“直言者”，正驾驶成为“倾听者”，以此打破沟通壁垒，规避空难风险
+              </p>
+              <p>
+                我们从中获得启发，通过心理学机制为你构建一个安全的“角色距离”。当人们以“角色”身份行动时，便能暂时卸下社会身份的压力与焦虑，从而更勇敢地表达真实想法
+              </p>
+            </section>
+
+            <section className="space-y-3 rounded-2xl border border-border/80 bg-card-lavender/40 p-5 shadow-soft-sm">
+              <h2 className="text-base font-semibold text-ink">介绍</h2>
+              <p className="font-medium text-ink">我们不只是模拟面试，更是一场心理实验</p>
+              <ul className="list-inside list-disc space-y-2 pl-0.5 marker:text-ink-subtle">
+                <li>
+                  <span className="font-medium text-ink">领取剧本：</span>
+                  输入你的面试场景与触发道具，生成专属角色卡
+                </li>
+                <li>
+                  <span className="font-medium text-ink">进入片场：</span>
+                  在动态真实的面试背景中，大声朗读角色宣言，进入角色
+                </li>
+                <li>
+                  <span className="font-medium text-ink">打板开拍：</span>
+                  请记住——表现好坏与真实的你无关，你只是在扮演另一个人
+                </li>
+                <li>
+                  <span className="font-medium text-ink">复盘总结：</span>
+                  AI 提供角色贴合度、表达技巧相关的反馈
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <div className="min-w-0 w-full shrink-0 lg:max-w-md xl:max-w-lg">
+            <div>
+              <PrimaryButton href="/session/new">开始</PrimaryButton>
+              <div className="mt-3 text-sm text-ink-muted">
+                内容默认保存在本地，不会上传
+              </div>
+            </div>
+
+            <section className="mt-10 lg:mt-8">
+              <div className="text-[20px] font-semibold leading-[1.2] text-ink">
+                历史会话
+              </div>
+              <div className="mt-4">
+                {rows === null ? (
+                  <div className="text-sm text-ink-muted">加载中…</div>
+                ) : rows.length === 0 ? (
+                  <EmptyState />
+                ) : (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    {rows.map(({ session, reviewHref, latestJob }) => (
+                      <div key={session.id} className="min-w-0">
+                        <SessionRow
+                          session={session}
+                          reviewHref={reviewHref}
+                          latestJob={latestJob}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
         </div>
-
-        <section className="mt-10">
-          <div className="text-[20px] font-semibold leading-[1.2] text-slate-900">
-            历史会话
-          </div>
-          <p className="mt-2 text-sm text-slate-600">
-            转写完成后，可从列表右侧「进入复盘」继续 AI 复盘；左侧仍进入会话详情。
-          </p>
-          <div className="mt-4">
-            {rows === null ? (
-              <div className="text-sm text-slate-600">加载中…</div>
-            ) : rows.length === 0 ? (
-              <EmptyState />
-            ) : (
-              <div className="space-y-3">
-                {rows.map(({ session, reviewHref }) => (
-                  <SessionRow key={session.id} session={session} reviewHref={reviewHref} />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
       </div>
     </main>
   );

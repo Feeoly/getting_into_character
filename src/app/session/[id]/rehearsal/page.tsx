@@ -156,7 +156,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
             duration_ms,
             threshold_ms: settings.pauseThresholdMs,
             prompt_shown: currentPausePromptShownRef.current,
-            session_status: session?.status ?? "not_started",
+            session_status: "active",
           });
         } catch {
           // 忽略写入失败（不影响录制）
@@ -184,7 +184,6 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
     recordingEpochStartMs,
     settings?.pauseThresholdMs,
     settings?.pausePromptEnabled,
-    session?.status,
     settings,
   ]);
 
@@ -323,7 +322,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-white/90 px-4 text-sm font-semibold text-slate-900 shadow-sm outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-white/90 px-4 text-sm font-semibold text-ink shadow-sm outline-none ring-offset-2 ring-offset-slate-900 transition hover:bg-white focus-visible:ring-2 focus-visible:ring-accent"
             >
               设置
             </button>
@@ -333,9 +332,9 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
         <div className="mt-6 flex flex-1 flex-col justify-end">
           <div className="mx-auto w-full max-w-3xl space-y-4">
             {notFound ? (
-              <div className="rounded-2xl border border-white/20 bg-white/95 px-6 py-8 text-slate-900 shadow-xl backdrop-blur">
+              <div className="rounded-2xl border border-white/20 bg-white/95 px-6 py-8 text-ink shadow-xl backdrop-blur">
                 <div className="text-sm font-semibold">会话不存在</div>
-                <div className="mt-2 text-sm text-slate-600">
+                <div className="mt-2 text-sm text-ink-muted">
                   可能已被清理，或链接有误。
                 </div>
                 <div className="mt-4">

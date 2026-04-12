@@ -20,12 +20,12 @@ const primaryLabel: Record<SessionPrimaryProgress, string> = {
 };
 
 const primaryClass: Record<SessionPrimaryProgress, string> = {
-  pending_role: "bg-amber-50 text-amber-900",
-  pending_read: "bg-amber-50 text-amber-900",
-  pending_rehearsal: "bg-sky-50 text-sky-800",
-  pending_transcribe: "bg-violet-50 text-violet-800",
-  pending_review: "bg-indigo-50 text-indigo-800",
-  done: "bg-emerald-50 text-emerald-800",
+  pending_role: "bg-accent-muted text-link",
+  pending_read: "bg-card-peach/70 text-ink",
+  pending_rehearsal: "bg-card-sage/80 text-ink",
+  pending_transcribe: "bg-card-lavender/70 text-ink",
+  pending_review: "bg-card-tan/70 text-ink",
+  done: "bg-emerald-100/90 text-emerald-900",
 };
 
 /**

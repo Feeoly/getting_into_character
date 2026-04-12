@@ -1,5 +1,7 @@
 import type { Session } from "../_lib/sessionTypes";
-import { StatusBadge } from "./StatusBadge";
+import { SESSION_SCENE_LABELS } from "../_lib/sessionTypes";
+import type { TranscriptionJobRow } from "../session/[id]/rehearsal/_lib/transcription/transcriptionTypes";
+import { PrimaryProgressBadge } from "./PrimaryProgressBadge";
 
 function formatDate(ms: number) {
   return new Date(ms).toLocaleString("zh-CN", {
@@ -11,29 +13,29 @@ function formatDate(ms: number) {
   });
 }
 
-export function SessionMeta({ session }: { session: Session }) {
-  const duration =
-    session.durationSec === undefined ? "—" : `${session.durationSec}s`;
+type Props = {
+  session: Session;
+  latestJob: TranscriptionJobRow | null | undefined;
+};
+
+export function SessionMeta({ session, latestJob }: Props) {
+  const sceneLabel = SESSION_SCENE_LABELS[session.scene];
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-6 py-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-sm font-semibold text-slate-900">公务员面试</div>
-          <div className="mt-1 text-xs text-slate-600">{formatDate(session.createdAt)}</div>
-          {session.name ? (
-            <div className="mt-2 text-sm text-slate-700">备注：{session.name}</div>
-          ) : (
-            <div className="mt-2 text-sm text-slate-500">备注：—</div>
-          )}
-          <div className="mt-2 text-sm text-slate-500">
-            时长：{duration}
+    <div className="rounded-2xl border border-border/80 bg-surface px-6 py-5 shadow-soft-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-ink">{sceneLabel}</div>
+          <div className="mt-1 text-xs text-ink-muted">{formatDate(session.createdAt)}</div>
+          <div className="mt-2 text-sm text-ink-muted">
+            备注：{session.name ?? "—"}
           </div>
         </div>
 
-        <StatusBadge status={session.status} />
+        <div className="shrink-0">
+          <PrimaryProgressBadge session={session} latestJob={latestJob} />
+        </div>
       </div>
     </div>
   );
 }
-

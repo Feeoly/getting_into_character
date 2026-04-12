@@ -73,10 +73,10 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
 
   if (notFound) {
     return (
-      <main className="min-h-dvh bg-[#F8FAFC] px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-2xl rounded-lg border border-slate-200 bg-white px-6 py-8">
-          <div className="text-sm font-semibold text-slate-900">会话不存在</div>
-          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-blue-600">
+      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
+        <div className="mx-auto max-w-2xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+          <div className="text-sm font-semibold text-ink">会话不存在</div>
+          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-link">
             返回首页
           </Link>
         </div>
@@ -86,20 +86,20 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
 
   if (!session) {
     return (
-      <main className="min-h-dvh bg-[#F8FAFC] px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-2xl text-sm text-slate-600">加载中…</div>
+      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
+        <div className="mx-auto max-w-2xl text-sm text-ink-muted">加载中…</div>
       </main>
     );
   }
 
   if (!getEffectiveRoleCardText(session)) {
     return (
-      <main className="min-h-dvh bg-[#F8FAFC] px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-2xl rounded-lg border border-slate-200 bg-white px-6 py-8">
-          <p className="text-sm text-slate-700">还没有角色卡。请返回会话详情生成并保存。</p>
+      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
+        <div className="mx-auto max-w-2xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+          <p className="text-sm text-ink-muted">还没有角色卡。请返回会话详情生成并保存。</p>
           <Link
             href={`/session/${id}#role-card-section`}
-            className="mt-4 inline-flex text-sm font-semibold text-blue-600"
+            className="mt-4 inline-flex text-sm font-semibold text-link"
           >
             {role.backToSession}
           </Link>
@@ -109,28 +109,28 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
   }
 
   return (
-    <main className="min-h-dvh bg-[#F8FAFC] px-6 py-8 md:px-12 md:py-12">
+    <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
       <div className="mx-auto max-w-2xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-[20px] font-semibold leading-[1.2] text-slate-900">
+            <h1 className="text-[20px] font-semibold leading-[1.2] text-ink">
               {role.readPageTitle}
             </h1>
-            <p className="mt-1 text-sm text-slate-600">{role.readPageHint}</p>
+            <p className="mt-1 text-sm text-ink-muted">{role.readPageHint}</p>
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <BackToHomeLink />
             <Link
               href={`/session/${id}`}
-              className="text-sm font-semibold text-blue-600 hover:underline"
+              className="text-sm font-semibold text-link hover:underline"
             >
               {role.backToSession}
             </Link>
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-slate-800">
+        <div className="mt-6 rounded-lg border border-border/80 bg-surface p-6 shadow-sm">
+          <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-ink">
             {getEffectiveRoleCardText(session) ?? ""}
           </pre>
         </div>
@@ -140,18 +140,18 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
             <button
               type="button"
               onClick={onListen}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-6 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-surface px-6 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
             >
               {role.listenOnce}
             </button>
           ) : (
-            <p className="text-xs text-slate-500">{role.listenUnsupported}</p>
+            <p className="text-xs text-ink-subtle">{role.listenUnsupported}</p>
           )}
           <button
             type="button"
             disabled={busy}
             onClick={() => void onComplete()}
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-6 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60"
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-accent px-6 text-sm font-semibold text-white shadow-sm hover:bg-accent-hover disabled:opacity-60"
           >
             {role.completeRead}
           </button>

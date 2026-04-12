@@ -6,7 +6,7 @@ import { use, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
 import { BackToHomeLink } from "../../../../_ui/BackToHomeLink";
-import { getSessionById } from "../../../../_lib/sessionRepo";
+import { acknowledgeSessionReview, getSessionById } from "../../../../_lib/sessionRepo";
 import type { Session } from "../../../../_lib/sessionTypes";
 import { listPauseEventsForTake } from "../../rehearsal/_lib/rehearsalRepo";
 import type { PauseEvent } from "../../rehearsal/_lib/rehearsalTypes";
@@ -151,6 +151,11 @@ export default function ReviewPage({
           return null;
         });
       }
+
+      if (job?.status === "succeeded") {
+        const ack = await acknowledgeSessionReview(id, takeId);
+        if (!cancelled && ack.ok) setSession(ack.value);
+      }
     })();
     return () => {
       cancelled = true;
@@ -188,11 +193,11 @@ export default function ReviewPage({
 
   if (badTake) {
     return (
-      <main className="min-h-dvh bg-[#F8FAFC] px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-3xl rounded-lg border border-slate-200 bg-white px-6 py-8">
-          <div className="text-sm font-semibold text-slate-900">链接无效</div>
-          <div className="mt-2 text-sm text-slate-600">复盘轮次标识不正确。</div>
-          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-blue-600">
+      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
+        <div className="mx-auto max-w-3xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+          <div className="text-sm font-semibold text-ink">链接无效</div>
+          <div className="mt-2 text-sm text-ink-muted">复盘轮次标识不正确。</div>
+          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-link">
             返回首页
           </Link>
         </div>
@@ -202,10 +207,10 @@ export default function ReviewPage({
 
   if (notFound) {
     return (
-      <main className="min-h-dvh bg-[#F8FAFC] px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-3xl rounded-lg border border-slate-200 bg-white px-6 py-8">
-          <div className="text-sm font-semibold text-slate-900">会话不存在</div>
-          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-blue-600">
+      <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
+        <div className="mx-auto max-w-3xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+          <div className="text-sm font-semibold text-ink">会话不存在</div>
+          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-link">
             返回首页
           </Link>
         </div>
@@ -216,13 +221,13 @@ export default function ReviewPage({
   const suggestedBase = `gic-review-${id.slice(0, 8)}-${takeId.slice(0, 8)}`;
 
   return (
-    <main className="min-h-dvh bg-[#F8FAFC] px-6 py-8 md:px-12 md:py-12">
+    <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
       <div className="mx-auto max-w-6xl">
-        <header className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-4">
+        <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border/80 pb-4">
           <div>
-            <h1 className="text-[20px] font-semibold leading-[1.2] text-slate-900">{review.pageTitle}</h1>
-            <p className="mt-1 text-sm text-slate-500">{review.subtitleHint}</p>
-            <p className="mt-1 text-xs text-slate-500">{stt.fullPageHint}</p>
+            <h1 className="text-[20px] font-semibold leading-[1.2] text-ink">{review.pageTitle}</h1>
+            <p className="mt-1 text-sm text-ink-subtle">{review.subtitleHint}</p>
+            <p className="mt-1 text-xs text-ink-subtle">{stt.fullPageHint}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <BackToHomeLink />
@@ -231,7 +236,7 @@ export default function ReviewPage({
               onClick={() =>
                 void downloadTextFile(buildMarkdown(session, segments, pauses), suggestedBase, "md")
               }
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
             >
               {review.exportMd}
             </button>
@@ -240,13 +245,13 @@ export default function ReviewPage({
               onClick={() =>
                 void downloadTextFile(buildTxt(session, segments, pauses), suggestedBase, "txt")
               }
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
             >
               {review.exportTxt}
             </button>
             <Link
               href={`/session/${id}`}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
             >
               {review.backToSession}
             </Link>
@@ -254,7 +259,7 @@ export default function ReviewPage({
         </header>
 
         {!session ? (
-          <div className="mt-6 text-sm text-slate-600">加载中…</div>
+          <div className="mt-6 text-sm text-ink-muted">加载中…</div>
         ) : (
           <div className="mt-6 flex flex-col gap-6 lg:flex-row">
             <div className="min-w-0 flex-1 space-y-4">
@@ -263,7 +268,7 @@ export default function ReviewPage({
                   ref={(el) => {
                     mediaRef.current = el;
                   }}
-                  className="w-full rounded-lg border border-slate-200 bg-black"
+                  className="w-full rounded-lg border border-border/80 bg-black"
                   src={mediaUrl}
                   controls
                   playsInline
@@ -290,28 +295,28 @@ export default function ReviewPage({
                 />
               ) : null}
 
-              <div className="rounded-lg border border-slate-200 bg-white px-4 py-4 shadow-sm md:px-6 md:py-5">
-                <h2 className="text-sm font-semibold text-slate-900">{review.transcriptSection}</h2>
+              <div className="rounded-lg border border-border/80 bg-surface px-4 py-4 shadow-sm md:px-6 md:py-5">
+                <h2 className="text-sm font-semibold text-ink">{review.transcriptSection}</h2>
                 {segments.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-600">{stt.emptyFull}</p>
+                  <p className="mt-3 text-sm text-ink-muted">{stt.emptyFull}</p>
                 ) : (
                   <ul className="mt-3 space-y-2">
                     {segments.map((s, i) => (
                       <li key={s.id}>
-                        {i > 0 ? <div className="mb-2 h-1 w-full rounded-full bg-[#E2E8F0]" /> : null}
+                        {i > 0 ? <div className="mb-2 h-1 w-full rounded-full bg-border/80" /> : null}
                         <button
                           type="button"
                           onClick={() => seekTo(s.start_ms)}
                           disabled={!mediaUrl}
                           aria-label={mediaUrl ? review.segmentJump : undefined}
                           className={`flex w-full gap-3 rounded-md text-left ${
-                            mediaUrl ? "cursor-pointer hover:bg-slate-50" : ""
-                          } ${activeSegId === s.id ? "bg-blue-50/60" : ""}`}
+                            mediaUrl ? "cursor-pointer hover:bg-accent-muted/40" : ""
+                          } ${activeSegId === s.id ? "bg-accent-muted/50" : ""}`}
                         >
-                          <div className="w-[4.5rem] shrink-0 pt-0.5 text-sm font-semibold tabular-nums text-slate-500">
+                          <div className="w-[4.5rem] shrink-0 pt-0.5 text-sm font-semibold tabular-nums text-ink-subtle">
                             {fmt(s.start_ms)}
                           </div>
-                          <div className="min-w-0 flex-1 text-sm leading-relaxed text-slate-800">
+                          <div className="min-w-0 flex-1 text-sm leading-relaxed text-ink">
                             {s.text || "（无文本）"}
                           </div>
                         </button>
@@ -323,10 +328,10 @@ export default function ReviewPage({
             </div>
 
             <aside className="w-full shrink-0 space-y-4 lg:w-[340px]">
-              <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 shadow-sm">
-                <h2 className="text-sm font-semibold text-slate-900">{review.pauseSectionTitle}</h2>
+              <div className="rounded-lg border border-border/80 bg-card-tan/20 px-4 py-4 shadow-sm">
+                <h2 className="text-sm font-semibold text-ink">{review.pauseSectionTitle}</h2>
                 {pauses.length === 0 ? (
-                  <p className="mt-2 text-sm text-slate-600">{review.noPauses}</p>
+                  <p className="mt-2 text-sm text-ink-muted">{review.noPauses}</p>
                 ) : (
                   <ul className="mt-2 space-y-2">
                     {pauses.map((p) => (
@@ -335,8 +340,8 @@ export default function ReviewPage({
                           type="button"
                           onClick={() => seekTo(p.start_ms)}
                           disabled={!mediaUrl}
-                          className={`w-full rounded-md px-2 py-2 text-left text-sm text-slate-800 ${
-                            mediaUrl ? "hover:bg-white" : ""
+                          className={`w-full rounded-md px-2 py-2 text-left text-sm text-ink ${
+                            mediaUrl ? "hover:bg-accent-muted/40" : ""
                           }`}
                         >
                           {pauseLabel(p)}
@@ -353,12 +358,12 @@ export default function ReviewPage({
         )}
 
         {session ? (
-          <div className="mt-8 border-t border-slate-200 pt-6">
-            <p className="text-sm font-semibold text-slate-900">{review.dangerZone}</p>
+          <div className="mt-8 border-t border-border/80 pt-6">
+            <p className="text-sm font-semibold text-ink">{review.dangerZone}</p>
             <button
               type="button"
               onClick={onDeleteTake}
-              className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-300 bg-white px-4 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50"
+              className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-red-300 bg-surface px-4 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50"
             >
               {review.deleteTake}
             </button>

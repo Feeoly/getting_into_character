@@ -94,11 +94,11 @@ export default function TranscriptPage({
   if (badTake) {
     return (
       <main className="px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-3xl rounded-lg border border-slate-200 bg-white px-6 py-8">
-          <div className="text-sm font-semibold text-slate-900">链接无效</div>
-          <div className="mt-2 text-sm text-slate-600">转写轮次标识不正确。</div>
+        <div className="mx-auto max-w-3xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+          <div className="text-sm font-semibold text-ink">链接无效</div>
+          <div className="mt-2 text-sm text-ink-muted">转写轮次标识不正确。</div>
           <div className="mt-4">
-            <Link href="/" className="text-sm font-semibold text-blue-600">
+            <Link href="/" className="text-sm font-semibold text-link">
               返回首页
             </Link>
           </div>
@@ -110,9 +110,9 @@ export default function TranscriptPage({
   if (notFound) {
     return (
       <main className="px-6 py-8 md:px-12 md:py-12">
-        <div className="mx-auto max-w-3xl rounded-lg border border-slate-200 bg-white px-6 py-8">
-          <div className="text-sm font-semibold text-slate-900">会话不存在</div>
-          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-blue-600">
+        <div className="mx-auto max-w-3xl rounded-lg border border-border/80 bg-surface px-6 py-8">
+          <div className="text-sm font-semibold text-ink">会话不存在</div>
+          <Link href="/" className="mt-4 inline-block text-sm font-semibold text-link">
             返回首页
           </Link>
         </div>
@@ -121,44 +121,44 @@ export default function TranscriptPage({
   }
 
   return (
-    <main className="min-h-dvh bg-[#F8FAFC] px-6 py-8 md:px-12 md:py-12">
+    <main className="min-h-dvh bg-page px-6 py-8 md:px-12 md:py-12">
       <div className="mx-auto max-w-3xl">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="text-[20px] font-semibold leading-[1.2] text-slate-900">
+            <h1 className="text-[20px] font-semibold leading-[1.2] text-ink">
               {stt.fullPageTitle}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">{stt.fullPageHint}</p>
+            <p className="mt-1 text-sm text-ink-subtle">{stt.fullPageHint}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <BackToHomeLink />
             <button
               type="button"
               onClick={onRetranscribe}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
             >
               {stt.retranscribe}
             </button>
             <Link
               href={`/session/${id}/review/${takeId}`}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
             >
               {review.openReview}
             </Link>
             <Link
               href={`/session/${id}`}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-surface px-4 text-sm font-semibold text-ink shadow-sm hover:bg-accent-muted/40"
             >
               返回会话
             </Link>
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border border-slate-200 bg-white px-4 py-4 shadow-sm md:px-6 md:py-5">
+        <div className="mt-6 rounded-lg border border-border/80 bg-surface px-4 py-4 shadow-sm md:px-6 md:py-5">
           {!session ? (
-            <div className="text-sm text-slate-600">加载中…</div>
+            <div className="text-sm text-ink-muted">加载中…</div>
           ) : segments.length === 0 ? (
-            <div className="text-sm text-slate-600">{stt.emptyFull}</div>
+            <div className="text-sm text-ink-muted">{stt.emptyFull}</div>
           ) : (
             <ul className="space-y-2">
               {segments.map((s, i) => (
@@ -166,11 +166,11 @@ export default function TranscriptPage({
                   {i > 0 ? <div className="mb-2 h-1 w-full rounded-full bg-[#E2E8F0]" /> : null}
                   <div className="flex gap-3">
                     <div
-                      className="w-[4.5rem] shrink-0 pt-0.5 text-left text-sm font-semibold tabular-nums text-slate-500"
+                      className="w-[4.5rem] shrink-0 pt-0.5 text-left text-sm font-semibold tabular-nums text-ink-subtle"
                     >
                       {fmt(s.start_ms)}
                     </div>
-                    <div className="min-w-0 flex-1 text-sm leading-relaxed text-slate-800">
+                    <div className="min-w-0 flex-1 text-sm leading-relaxed text-ink">
                       {s.text || "（无文本）"}
                     </div>
                   </div>
