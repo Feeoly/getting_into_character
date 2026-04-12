@@ -59,8 +59,8 @@ export default function Home() {
         </p>
 
         <div className="mt-8 flex flex-col gap-10 lg:mt-10 lg:flex-row lg:items-start lg:gap-12">
-          <div className="min-w-0 flex-1 space-y-8 text-[15px] leading-[1.65] text-ink-muted">
-            <section className="space-y-3 rounded-[var(--radius-card)] border border-soft-border bg-card-sage/35 p-5">
+          <div className="min-w-0 flex-1 text-[15px] leading-[1.65] text-ink-muted">
+            <section className="space-y-3 rounded-[var(--radius-card)] bg-surface p-5 mb-5">
               <h2 className="text-base font-semibold text-ink">背景</h2>
               <p>
                 《The Rehearsal》第二季曾进行一项实验：让副飞行员化身“直言者”，正驾驶成为“倾听者”，以此打破沟通壁垒，规避空难风险
@@ -72,9 +72,14 @@ export default function Home() {
                 </span>
               </p>
             </section>
-
-            <section className="space-y-3 rounded-[var(--radius-card)] border border-soft-border bg-card-lavender/40 p-5">
+            <section className="space-y-3 rounded-[var(--radius-card)] bg-surface p-5">
               <h2 className="text-base font-semibold text-ink">介绍</h2>
+              <p>
+                我们从中获得启发，通过心理学机制为你构建一个安全的“角色距离”。
+                <span className="font-semibold text-ink">
+                  当人们以“角色”身份行动时，便能暂时卸下社会身份的压力与焦虑，从而更勇敢地表达真实想法
+                </span>
+              </p>
               <p className="font-medium text-ink">我们不只是模拟面试，更是一场心理实验</p>
               <ul className="list-inside list-disc space-y-2 pl-0.5 marker:text-ink-subtle">
                 <li>
