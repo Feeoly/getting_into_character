@@ -7,7 +7,9 @@ import { useRouter } from "next/navigation";
 import { BackToHomeLink } from "../../../../_ui/BackToHomeLink";
 import { getSessionById, markRoleReadAloudComplete } from "../../../../_lib/sessionRepo";
 import { getEffectiveRoleCardText, type Session } from "../../../../_lib/sessionTypes";
+import { plainTextForRoleCardTts } from "../../../../_lib/plainTextForRoleCardTts";
 import { role } from "../../_lib/roleCopy";
+import { RoleCardMarkdown } from "../../_ui/RoleCardMarkdown";
 
 export default function RoleReadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -51,7 +53,7 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
     const card = getEffectiveRoleCardText(session);
     if (!card || !ttsSupported) return;
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(card);
+    const u = new SpeechSynthesisUtterance(plainTextForRoleCardTts(card));
     u.lang = "zh-CN";
     utterRef.current = u;
     window.speechSynthesis.speak(u);
@@ -129,10 +131,11 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border border-border/80 bg-surface p-6 shadow-sm">
-          <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-ink">
-            {getEffectiveRoleCardText(session) ?? ""}
-          </pre>
+        <div className="mt-6 rounded-2xl border border-border/80 bg-surface p-5 shadow-soft-sm md:p-6">
+          <RoleCardMarkdown
+            markdown={getEffectiveRoleCardText(session) ?? ""}
+            variant="read"
+          />
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">

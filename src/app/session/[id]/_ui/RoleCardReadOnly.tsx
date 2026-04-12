@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { saveRoleCardAiResult, setRoleCardPreferAi } from "../../../_lib/sessionRepo";
 import { getEffectiveRoleCardText, type Session } from "../../../_lib/sessionTypes";
 import { role, roleAi } from "../_lib/roleCopy";
+import { RoleCardMarkdown } from "./RoleCardMarkdown";
 
 const CONSENT_KEY = "gic-ai-role-consent-v1";
 
@@ -120,9 +121,9 @@ export function RoleCardReadOnly({ session, sessionId, onSessionChange }: Props)
       className="rounded-2xl border border-border/80 bg-surface px-6 py-5 shadow-soft-sm"
     >
       <div className="text-sm font-semibold text-ink">{role.sectionTitle}</div>
-      <pre className="mt-3 max-h-[min(60vh,28rem)] overflow-auto whitespace-pre-wrap break-words rounded-xl bg-card-tan/25 p-4 text-sm leading-relaxed text-ink">
-        {effective ?? "—"}
-      </pre>
+      <div className="mt-3 rounded-xl border border-[#d4cfc4]/60">
+        <RoleCardMarkdown markdown={effective ?? ""} variant="compact" />
+      </div>
 
       {hasLocalDraft ? (
         <div className="mt-4 space-y-3 rounded-xl border border-border/70 bg-card-peach/25 px-4 py-3">
