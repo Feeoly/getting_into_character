@@ -4,11 +4,12 @@ export const role = {
   sectionTitle: "角色与触发物",
   sectionHint: "进入排练前可先准备角色卡，并通过朗读模式巩固状态。",
   moodLabel: "角色状态",
-  moodPlaceholder: "选择一种气质（可与下方补充叠加）",
+  moodPlaceholder: "选择一种气质",
   moodCustomLabel: "补充说明（可选）",
-  moodCustomPlaceholder: "例如：语速放慢、少用手势",
+  moodCustomPlaceholder:
+    "比如：角色名叫陆沉舟，取自\"沉舟侧畔千帆过\"，自带一种历经风浪后的沉稳与静气。设定是个见过世面的女士，性格是话少、慢热、脸皮厚",
   triggerLabel: "触发物",
-  triggerPlaceholder: "例如：一支笔、水杯",
+  triggerPlaceholder: "例如：一支笔，水杯",
   save: "保存并生成角色卡",
   savedHint: "已生成角色卡。下一步：点击下方「进入朗读模式」朗读一遍，再回本页进入排练。",
   goRead: "进入朗读模式",
@@ -45,3 +46,17 @@ export const ROLE_MOOD_LABELS: Record<RoleMoodPresetId, string> = {
   calm: "冷静",
   steady: "沉稳",
 };
+
+/** Phase 6：角色卡 AI 增强（百炼，仅文本） */
+export const roleAi = {
+  disclosure:
+    "勾选同意后，可将当前角色卡相关文字发送到百炼（OpenAI 兼容接口）生成增强稿；录音仍在本地，不会上传。",
+  consentLabel:
+    "我同意仅向模型服务发送本页的角色卡与气质/触发物相关文字，不上传录音文件。",
+  enhanceButton: "AI 增强角色卡",
+  useLocal: "使用本地原版",
+  useAi: "使用增强版",
+  consentRequired: "请先勾选同意说明，再使用 AI 增强。",
+  enhancing: "正在生成…",
+  errorPrefix: "请求失败：",
+} as const;

@@ -5,7 +5,7 @@
 - [x] **Phase 3: 本地转写管线（可插拔引擎）** - 录后转写为文本并带时间信息，默认不上传
 - [x] **Phase 4: 复盘闭环 + 导出/删除** - 复盘页可基于文本/停顿快速复盘，支持导出与一键清理
 - [x] **Phase 5: 角色卡差异化 + 证据锚定建议** - 角色进入（生成+朗读）；证据锚定以可执行角色卡为主（复盘 AI 见 Phase 4）
-- [ ] **Phase 6: 会话详情页角色卡 AI 优化以增强角色感** - AI 润色/增强呈现，让「角色感」更可感知
+- [x] **Phase 6: 会话详情页角色卡 AI 优化以增强角色感** - AI 润色/增强呈现，让「角色感」更可感知 (completed 2026-04-12)
 
 ## Phase Details
 
@@ -97,7 +97,7 @@ Plans:
 | 3. 本地转写管线（可插拔引擎） | 3/3 | Complete | 2026-04-11 |
 | 4. 复盘闭环 + 导出/删除 | 3/3 | Complete | 2026-04-11 |
 | 5. 角色卡差异化 + 证据锚定建议 | 2/2 | Complete | 2026-04-11 |
-| 6. 会话详情页角色卡 AI 优化以增强角色感 | 0/2 | Ready to execute | - |
+| 6. 会话详情页角色卡 AI 优化以增强角色感 | 2/2 | Complete | 2026-04-12 |
 
 
 ### Phase 6: 会话详情页角色卡 AI 优化以增强角色感
@@ -111,8 +111,8 @@ Plans:
   3. 增强结果（或解析后）正文包含与 `roleCopy` 一致的三节标题：**状态描述**、**可执行表达指令**、**禁忌**。
   4. `/session/[id]/role/read` 朗读与详情区展示的「展示稿」一致（`getEffectiveRoleCardText`）。
   5. 失败时保留本地稿，IndexedDB 不因请求失败而损坏。
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 06-01-PLAN.md — Session 扩展 + `getEffectiveRoleCardText` + 共享百炼 helper + `POST /api/role/enhance`
-- [ ] 06-02-PLAN.md — `sessionRepo` 写入 AI 稿/偏好；`RoleCardReadOnly` 同意门闸与增强；朗读页用 effective 文本
+- [x] 06-01-PLAN.md — Session 扩展 + `getEffectiveRoleCardText` + 共享百炼 helper + `POST /api/role/enhance`
+- [x] 06-02-PLAN.md — `sessionRepo` 写入 AI 稿/偏好；`RoleCardReadOnly` 同意门闸与增强；朗读页用 effective 文本

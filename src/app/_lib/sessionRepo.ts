@@ -6,7 +6,6 @@ import {
   type Session,
   type SessionRepoError,
   type SessionScene,
-  type SessionStatus,
   type SessionRoleMoodPreset,
 } from "./sessionTypes";
 
@@ -31,7 +30,6 @@ function makeId(): string {
   if (c?.getRandomValues) {
     const bytes = new Uint8Array(16);
     c.getRandomValues(bytes);
-    // RFC4122 v4
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
     const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0"));
@@ -43,13 +41,6 @@ function makeId(): string {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function isValidTransition(prev: SessionStatus, next: SessionStatus): boolean {
-  if (prev === next) return true;
-  if (prev === "not_started" && next === "in_progress") return true;
-  if (prev === "in_progress" && next === "ended") return true;
-  return false;
-}
-
 function toStorageError(): SessionRepoError {
   return {
     code: "storage_error",
@@ -58,48 +49,17 @@ function toStorageError(): SessionRepoError {
   };
 }
 
-export async function createSession(input?: {
-  scene?: SessionScene;
+export type CreateSessionCompleteInput = {
+  scene: SessionScene;
   name?: string;
-}): Promise<RepoResult<Session>> {
-  try {
-    const now = Date.now();
-    const session: Session = {
-      id: makeId(),
-      scene: input?.scene ?? "civil_service",
-      createdAt: now,
-      status: "not_started",
-      ...(input?.name ? { name: input.name } : {}),
-    };
-
-    await db.sessions.add(session);
-
-    return { ok: true, value: session };
-  } catch {
-    return { ok: false, error: toStorageError() };
-  }
-}
-
-export async function getSessionById(id: string): Promise<Session | null> {
-  try {
-    const row = await db.sessions.get(id);
-    if (!row) return null;
-    const parsed = SESSION_SCHEMA.safeParse(row);
-    return parsed.success ? parsed.data : null;
-  } catch {
-    return null;
-  }
-}
-
-export type SaveRoleCardInput = {
   moodPreset?: SessionRoleMoodPreset;
   moodCustom?: string;
   trigger: string;
 };
 
-export async function saveSessionRoleCard(
-  sessionId: string,
-  input: SaveRoleCardInput,
+/** 新建会话页一次性写入：场景、备注、角色卡（气质+触发物） */
+export async function createSessionComplete(
+  input: CreateSessionCompleteInput,
 ): Promise<RepoResult<Session>> {
   const trigger = input.trigger.trim();
   const custom = input.moodCustom?.trim() ?? "";
@@ -121,13 +81,6 @@ export async function saveSessionRoleCard(
   }
 
   try {
-    const current = await db.sessions.get(sessionId);
-    if (!current) {
-      return { ok: false, error: { code: "not_found", message: "会话不存在。" } };
-    }
-    const parsed = SESSION_SCHEMA.safeParse(current);
-    if (!parsed.success) return { ok: false, error: toStorageError() };
-
     const now = Date.now();
     const roleCardText = buildRoleCardText({
       moodPreset: input.moodPreset,
@@ -135,16 +88,96 @@ export async function saveSessionRoleCard(
       trigger,
     });
 
-    const next: Session = {
-      ...parsed.data,
+    const session: Session = {
+      id: makeId(),
+      scene: input.scene,
+      createdAt: now,
+      ...(input.name?.trim() ? { name: input.name.trim() } : {}),
       roleMoodPreset: input.moodPreset,
       roleMoodCustom: custom || undefined,
       roleTrigger: trigger,
       roleCardText,
       roleCardUpdatedAt: now,
-      roleReadAloudCompletedAt: undefined,
     };
 
+    const out = SESSION_SCHEMA.safeParse(session);
+    if (!out.success) return { ok: false, error: toStorageError() };
+
+    await db.sessions.add(out.data);
+    return { ok: true, value: out.data };
+  } catch {
+    return { ok: false, error: toStorageError() };
+  }
+}
+
+export async function getSessionById(id: string): Promise<Session | null> {
+  try {
+    const row = await db.sessions.get(id);
+    if (!row) return null;
+    const parsed = SESSION_SCHEMA.safeParse(row);
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 写入 AI 增强稿；默认优先展示 AI；并清除朗读完成（需重新朗读当前展示稿） */
+export async function saveRoleCardAiResult(
+  sessionId: string,
+  input: { roleCardAiText: string; roleCardPreferAi?: boolean },
+): Promise<RepoResult<Session>> {
+  try {
+    const current = await db.sessions.get(sessionId);
+    if (!current) {
+      return { ok: false, error: { code: "not_found", message: "会话不存在。" } };
+    }
+    const parsed = SESSION_SCHEMA.safeParse(current);
+    if (!parsed.success) return { ok: false, error: toStorageError() };
+
+    const trimmed = input.roleCardAiText.trim();
+    if (!trimmed) {
+      return {
+        ok: false,
+        error: { code: "validation_error", message: "增强结果为空。" },
+      };
+    }
+
+    const now = Date.now();
+    const next: Session = {
+      ...parsed.data,
+      roleCardAiText: trimmed,
+      roleCardAiUpdatedAt: now,
+      roleCardPreferAi: input.roleCardPreferAi ?? true,
+      roleReadAloudCompletedAt: undefined,
+    };
+    const out = SESSION_SCHEMA.safeParse(next);
+    if (!out.success) return { ok: false, error: toStorageError() };
+
+    await db.sessions.put(out.data);
+    return { ok: true, value: out.data };
+  } catch {
+    return { ok: false, error: toStorageError() };
+  }
+}
+
+/** 切换展示「本地原版 / 增强版」；清除朗读完成以免与展示稿不一致 */
+export async function setRoleCardPreferAi(
+  sessionId: string,
+  preferAi: boolean,
+): Promise<RepoResult<Session>> {
+  try {
+    const current = await db.sessions.get(sessionId);
+    if (!current) {
+      return { ok: false, error: { code: "not_found", message: "会话不存在。" } };
+    }
+    const parsed = SESSION_SCHEMA.safeParse(current);
+    if (!parsed.success) return { ok: false, error: toStorageError() };
+
+    const next: Session = {
+      ...parsed.data,
+      roleCardPreferAi: preferAi,
+      roleReadAloudCompletedAt: undefined,
+    };
     const out = SESSION_SCHEMA.safeParse(next);
     if (!out.success) return { ok: false, error: toStorageError() };
 
@@ -209,70 +242,31 @@ export async function deleteSessionCascade(sessionId: string): Promise<RepoResul
   }
 }
 
-export async function updateSessionStatus(
-  id: string,
-  nextStatus: SessionStatus,
+/** 用户在复盘页打开本轮成功转写后写入，用于主进度「已完成」判定 */
+export async function acknowledgeSessionReview(
+  sessionId: string,
+  takeId: string,
 ): Promise<RepoResult<Session>> {
   try {
-    const result = await db.transaction("rw", db.sessions, async () => {
-      const current = await db.sessions.get(id);
-      if (!current) {
-        return {
-          ok: false as const,
-          error: {
-            code: "not_found" as const,
-            message: "会话不存在。",
-          },
-        };
-      }
+    const current = await db.sessions.get(sessionId);
+    if (!current) {
+      return { ok: false, error: { code: "not_found", message: "会话不存在。" } };
+    }
+    const parsed = SESSION_SCHEMA.safeParse(current);
+    if (!parsed.success) return { ok: false, error: toStorageError() };
 
-      const parsed = SESSION_SCHEMA.safeParse(current);
-      if (!parsed.success) {
-        return { ok: false as const, error: toStorageError() };
-      }
+    const now = Date.now();
+    const next: Session = {
+      ...parsed.data,
+      reviewAcknowledgedAt: now,
+      reviewAcknowledgedTakeId: takeId,
+    };
+    const out = SESSION_SCHEMA.safeParse(next);
+    if (!out.success) return { ok: false, error: toStorageError() };
 
-      const session = parsed.data;
-      if (!isValidTransition(session.status, nextStatus)) {
-        return {
-          ok: false as const,
-          error: {
-            code: "invalid_transition" as const,
-            message: "当前状态不支持该操作。",
-          },
-        };
-      }
-
-      if (session.status === nextStatus) {
-        return { ok: true as const, value: session };
-      }
-
-      const now = Date.now();
-      const next: Session = {
-        ...session,
-        status: nextStatus,
-        ...(nextStatus === "in_progress"
-          ? { startedAt: session.startedAt ?? now }
-          : {}),
-        ...(nextStatus === "ended"
-          ? { endedAt: session.endedAt ?? now }
-          : {}),
-      };
-
-      if (next.status === "ended" && next.startedAt && next.endedAt) {
-        const durationSec = Math.max(
-          0,
-          Math.round((next.endedAt - next.startedAt) / 1000),
-        );
-        next.durationSec = durationSec;
-      }
-
-      await db.sessions.put(next);
-      return { ok: true as const, value: next };
-    });
-
-    return result;
+    await db.sessions.put(out.data);
+    return { ok: true, value: out.data };
   } catch {
     return { ok: false, error: toStorageError() };
   }
 }
-

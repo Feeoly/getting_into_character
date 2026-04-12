@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { BackToHomeLink } from "../../../../_ui/BackToHomeLink";
 import { getSessionById, markRoleReadAloudComplete } from "../../../../_lib/sessionRepo";
-import type { Session } from "../../../../_lib/sessionTypes";
+import { getEffectiveRoleCardText, type Session } from "../../../../_lib/sessionTypes";
 import { role } from "../../_lib/roleCopy";
 
 export default function RoleReadPage({ params }: { params: Promise<{ id: string }> }) {
@@ -47,9 +47,11 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
     typeof SpeechSynthesisUtterance !== "undefined";
 
   function onListen() {
-    if (!session?.roleCardText || !ttsSupported) return;
+    if (!session) return;
+    const card = getEffectiveRoleCardText(session);
+    if (!card || !ttsSupported) return;
     window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(session.roleCardText);
+    const u = new SpeechSynthesisUtterance(card);
     u.lang = "zh-CN";
     utterRef.current = u;
     window.speechSynthesis.speak(u);
@@ -90,7 +92,7 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
     );
   }
 
-  if (!session.roleCardText) {
+  if (!getEffectiveRoleCardText(session)) {
     return (
       <main className="min-h-dvh bg-[#F8FAFC] px-6 py-8 md:px-12 md:py-12">
         <div className="mx-auto max-w-2xl rounded-lg border border-slate-200 bg-white px-6 py-8">
@@ -129,7 +131,7 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
 
         <div className="mt-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
           <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed text-slate-800">
-            {session.roleCardText}
+            {getEffectiveRoleCardText(session) ?? ""}
           </pre>
         </div>
 

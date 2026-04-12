@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { callBailianChatCompletion } from "../../_lib/bailianChat";
+
 const messageSchema = z.object({
   role: z.enum(["user", "assistant", "system"]),
   content: z.string().max(16_000),
@@ -22,12 +24,6 @@ const bodySchema = z.object({
 
 const MAX_BODY_CHARS = 32_000;
 
-/** 百炼 OpenAI 兼容 Chat根路径；可用 BAILIAN_BASE_URL 覆盖 */
-const DEFAULT_BAILIAN_BASE_URL = "https://coding.dashscope.aliyuncs.com/v1";
-
-/** 可用 BAILIAN_CHAT_MODEL 覆盖，默认 MiniMax-M2.5 */
-const DEFAULT_CHAT_MODEL = "MiniMax-M2.5";
-
 function countBodyChars(b: z.infer<typeof bodySchema>): number {
   let n = 0;
   for (const m of b.messages) n += m.content.length;
@@ -41,20 +37,6 @@ function countBodyChars(b: z.infer<typeof bodySchema>): number {
 }
 
 export async function POST(req: Request) {
-  const key = process.env.BAILIAN_API_KEY;
-  if (!key?.trim()) {
-    return NextResponse.json(
-      {
-        error:
-          "未配置 BAILIAN_API_KEY。请在部署环境变量（或本机 export）中设置百炼 API Key。",
-      },
-      { status: 503 },
-    );
-  }
-
-  const baseRaw =
-    process.env.BAILIAN_BASE_URL?.trim() || DEFAULT_BAILIAN_BASE_URL;
-  const base = baseRaw.replace(/\/+$/, "");
   let json: unknown;
   try {
     json = await req.json();
@@ -75,7 +57,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "上下文过长" }, { status: 400 });
   }
 
-  const model = process.env.BAILIAN_CHAT_MODEL?.trim() || DEFAULT_CHAT_MODEL;
   const useStream = body.stream !== false;
 
   const systemParts: string[] = [
@@ -92,40 +73,27 @@ export async function POST(req: Request) {
     }
   }
 
-  const systemMessage = { role: "system" as const, content: systemParts.join("\n\n") };
-  const outboundMessages = [
-    systemMessage,
-    ...body.messages.filter((m) => m.role !== "system"),
-  ];
+  const system = systemParts.join("\n\n");
+  const messages = body.messages.filter((m) => m.role !== "system");
 
-  const url = `${base}/chat/completions`;
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: outboundMessages,
-        stream: useStream,
-      }),
-    });
-  } catch {
-    return NextResponse.json({ error: "无法连接模型服务" }, { status: 502 });
+  const result = await callBailianChatCompletion({
+    system,
+    messages,
+    stream: useStream,
+  });
+
+  if (!result.ok) {
+    if (result.detail) {
+      return NextResponse.json(
+        { error: result.error, detail: result.detail },
+        { status: result.status },
+      );
+    }
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  if (!res.ok) {
-    const t = await res.text();
-    return NextResponse.json(
-      { error: "模型服务返回错误", detail: t.slice(0, 500) },
-      { status: 502 },
-    );
-  }
-
-  if (useStream) {
+  if (result.stream) {
+    const res = result.upstream;
     if (!res.body) {
       return NextResponse.json({ error: "模型未返回流" }, { status: 502 });
     }
@@ -138,19 +106,5 @@ export async function POST(req: Request) {
     });
   }
 
-  const data: unknown = await res.json();
-  const content =
-    typeof data === "object" &&
-    data !== null &&
-    "choices" in data &&
-    Array.isArray((data as { choices: unknown }).choices)
-      ? (data as { choices: Array<{ message?: { content?: unknown } }> }).choices[0]?.message
-          ?.content
-      : undefined;
-
-  if (typeof content !== "string") {
-    return NextResponse.json({ error: "模型响应格式异常" }, { status: 502 });
-  }
-
-  return NextResponse.json({ content });
+  return NextResponse.json({ content: result.content });
 }
