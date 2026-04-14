@@ -61,21 +61,17 @@ export default function Home() {
                 《The Rehearsal》第二季曾进行一项实验：让副飞行员化身“直言者”，正驾驶成为“倾听者”，以此打破沟通壁垒，规避空难风险
               </p>
               <p>
-                我们从中获得启发，通过心理学机制为你构建一个安全的“角色距离”。
-                <span className="font-semibold text-ink">
-                  当人们以“角色”身份行动时，便能暂时卸下社会身份的压力与焦虑，从而更勇敢地表达真实想法
-                </span>
+                入戏从中获得启发，通过心理学机制为你构建一个安全的“角色距离”
               </p>
             </section>
             <section className="space-y-3 rounded-[var(--radius-card)] bg-surface p-5">
-              <h2 className="text-base font-semibold text-ink">介绍</h2>
+              <h2 className="text-base font-semibold text-ink">前言</h2>
               <p>
-                我们从中获得启发，通过心理学机制为你构建一个安全的“角色距离”。
                 <span className="font-semibold text-ink">
                   当人们以“角色”身份行动时，便能暂时卸下社会身份的压力与焦虑，从而更勇敢地表达真实想法
                 </span>
               </p>
-              <p className="font-medium text-ink">我们不只是模拟面试，更是一场心理实验</p>
+              <p className="font-medium text-ink">我们不只是模拟面试，更是你带入角色后的心理脱敏实战</p>
               <ul className="list-inside list-disc space-y-2 pl-0.5 marker:text-ink-subtle">
                 <li>
                   <span className="font-medium text-ink">领取剧本：</span>
@@ -83,11 +79,11 @@ export default function Home() {
                 </li>
                 <li>
                   <span className="font-medium text-ink">进入片场：</span>
-                  在动态真实的面试背景中，大声朗读角色宣言，进入角色
+                  在动态真实的面试背景中，大声朗读角色宣言，快速带入角色
                 </li>
                 <li>
                   <span className="font-medium text-ink">打板开拍：</span>
-                  请记住——表现好坏与真实的你无关，你只是在扮演另一个人
+                  请记住——表现好坏与真实的你无关，你只是在扮演另一个角色
                 </li>
                 <li>
                   <span className="font-medium text-ink">复盘总结：</span>
@@ -101,7 +97,7 @@ export default function Home() {
             <div>
               <PrimaryButton href="/session/new">开始</PrimaryButton>
               <div className="mt-3 text-sm text-ink-muted">
-                内容默认保存在本地，不会上传
+                内容默认保存在本地，不会上传云端
               </div>
             </div>
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { GongwuyuanFloatingReader } from "./_ui/GongwuyuanFloatingReader";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        {children}
+        <GongwuyuanFloatingReader />
+      </body>
     </html>
   );
 }

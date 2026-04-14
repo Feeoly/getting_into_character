@@ -3,7 +3,10 @@ import type { SessionRoleMoodPreset } from "../../_lib/sessionTypes";
 /** 新建会话页可一键填入的预设角色（补充说明 + 推荐气质 + 触发物） */
 export const ELENA_ROLE_TEMPLATE = {
   id: "elena" as const,
-  label: "Elena 角色卡",
+  label: "Elena（爱琳娜）角色卡",
+  /** 悬停提示：一句话概览 */
+  blurb:
+    "把自己当成来视察的资深前辈，松弛笃定地主导节奏，像在教下属做事而不是求对方给分。",
   moodPreset: "confident" satisfies SessionRoleMoodPreset,
   /** 与文案中「进门那一刻」呼应，作打板录制锚点 */
   trigger: "进门那一刻",
@@ -18,3 +21,28 @@ export const ELENA_ROLE_TEMPLATE = {
 
 你不是来考试的，你是来展示「老练」的。Elena 从不慌张，因为她掌控全局。`,
 } as const;
+
+/** 面对甩锅式追问：短句、对事不对人、守住事实边界 */
+export const REED_ROLE_TEMPLATE = {
+  id: "reed" as const,
+  label: "Reed（瑞德）角色卡",
+  blurb:
+    "面试官甩锅施压时，用短句、就事论事守住事实边界，冷静不接不属于自己的责任。",
+  moodPreset: "calm" satisfies SessionRoleMoodPreset,
+  /** 整理上衣的小动作作锚点；与下文「情况是……」呼应 */
+  trigger: "轻轻捋一下上衣",
+  moodCustom: `性格关键词：冷静、对事不对人、短句、不抬杠但不让步
+
+对面像一群自己没想清楚、自己踩了坑，却想把锅甩到你身上的面试官。你的任务不是讨好他们，也不是当场拆穿，而是稳稳守住事实边界：方案是谁提的、依据是什么、你做了什么、你没承诺过什么——用直白、好懂的话说清楚，不绕弯、不堆术语。
+
+呼吸均匀，语速偏慢；每句尽量短，像打点而不是写小作文。眼神不躲，也不瞪；把对方的话当成待核对的信息，不是对你的判决。需要稳住时，先暗暗整理一下上衣（例如轻轻捋一下衣摆或领口），像把场面和呼吸一起捋平，再开口。
+
+少说：「都是我不对」「可能是我理解错了」（除非真是你的错）。多说：「情况是……」「我的依据是……」「如果要调整，需要先确认……」被抢话时：「我补一句，就一句」→ 说完立刻停。
+
+锅可以讨论，但不能默默背；话可以少，但不能软。Reed 像芦苇：站得直，风大也不折。`,
+} as const;
+
+export const ROLE_CARD_TEMPLATE_LIST = [
+  ELENA_ROLE_TEMPLATE,
+  REED_ROLE_TEMPLATE,
+] as const;

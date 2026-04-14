@@ -8,7 +8,7 @@ import {
   SESSION_ROLE_MOOD_CUSTOM_MAX,
   type SessionScene,
 } from "../../_lib/sessionTypes";
-import { ELENA_ROLE_TEMPLATE } from "../_lib/roleTemplates";
+import { ROLE_CARD_TEMPLATE_LIST } from "../_lib/roleTemplates";
 import {
   ROLE_MOOD_LABELS,
   ROLE_MOOD_PRESET_IDS,
@@ -27,10 +27,10 @@ export default function NewSessionPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function applyElenaTemplate() {
-    setPreset(ELENA_ROLE_TEMPLATE.moodPreset);
-    setTrigger(ELENA_ROLE_TEMPLATE.trigger);
-    setCustom(ELENA_ROLE_TEMPLATE.moodCustom);
+  function applyRoleTemplate(t: (typeof ROLE_CARD_TEMPLATE_LIST)[number]) {
+    setPreset(t.moodPreset);
+    setTrigger(t.trigger);
+    setCustom(t.moodCustom);
   }
 
   async function onSubmit() {
@@ -88,15 +88,34 @@ export default function NewSessionPage() {
 
           <div className="pt-2">
             <div className="text-sm font-semibold text-ink">{role.sectionTitle}</div>
-            <div className="mt-3 flex flex-col gap-2 rounded-2xl bg-page px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <span className="text-xs text-ink-muted">角色模板 · 一键填入后可改</span>
-              <button
-                type="button"
-                onClick={applyElenaTemplate}
-                className="ui-btn ui-btn-sm shrink-0"
-              >
-                填入 {ELENA_ROLE_TEMPLATE.label}
-              </button>
+            <div className="mt-3 rounded-2xl bg-page px-4 py-3">
+              <span className="mb-3 block text-sm text-ink-muted sm:text-[15px]">
+                角色模板 · 一键填入后可改
+              </span>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                {ROLE_CARD_TEMPLATE_LIST.map((t) => (
+                  <span
+                    key={t.id}
+                    className="group relative min-w-0"
+                  >
+                    <button
+                      type="button"
+                      aria-describedby={`role-template-blurb-${t.id}`}
+                      onClick={() => applyRoleTemplate(t)}
+                      className="ui-btn ui-btn-sm h-auto min-h-[2.25rem] w-full min-w-0 whitespace-normal px-2 text-center leading-snug sm:px-3"
+                    >
+                      填入 {t.label}
+                    </button>
+                    <span
+                      id={`role-template-blurb-${t.id}`}
+                      role="tooltip"
+                      className="pointer-events-none invisible absolute bottom-full left-1/2 z-50 mb-2 w-max max-w-[min(18rem,calc(100vw-3rem))] -translate-x-1/2 rounded-xl border border-ink/15 bg-ink px-3 py-2 text-left text-[12px] leading-snug text-page opacity-0 shadow-lg transition-[opacity,visibility] duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+                    >
+                      {t.blurb}
+                    </span>
+                  </span>
+                ))}
+              </div>
             </div>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="md:min-w-0">
