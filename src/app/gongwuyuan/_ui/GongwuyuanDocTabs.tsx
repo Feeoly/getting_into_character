@@ -29,11 +29,17 @@ export function GongwuyuanDocTabs({ items, density = "default" }: Props) {
 
   const safeIndex = Math.min(active, items.length - 1);
   const doc = items[safeIndex]!;
+  /** 侧栏：全宽纵排；独立页：横向且限制胶囊最大宽度 */
+  const tabBtnWidth = compact ? "w-full max-w-full" : "max-w-[min(100%,22rem)] shrink";
 
   return (
-    <div className={compact ? "space-y-3" : "mt-6 space-y-4"}>
+    <div className={compact ? "min-w-0 space-y-3" : "mt-6 min-w-0 space-y-4"}>
       <div
-        className="-mx-0.5 flex gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible"
+        className={
+          compact
+            ? "-mx-0.5 flex min-w-0 flex-col gap-1.5"
+            : "-mx-0.5 flex min-w-0 gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible"
+        }
         role="tablist"
         aria-label="文档切换"
       >
@@ -47,14 +53,15 @@ export function GongwuyuanDocTabs({ items, density = "default" }: Props) {
               aria-selected={selected}
               id={`gwy-tab-${item.id}`}
               aria-controls={`gwy-panel-${item.id}`}
+              title={item.label}
               onClick={() => setActive(i)}
               className={
                 selected
-                  ? `ui-btn ui-btn-sm ui-btn-on shrink-0 px-2.5 ${compact ? "text-[12px]" : "px-3"}`
-                  : `ui-btn ui-btn-sm shrink-0 px-2.5 ${compact ? "text-[12px]" : "px-3"}`
+                  ? `ui-btn ui-btn-sm ui-btn-on min-w-0 !justify-start gap-0 px-2.5 text-left ${compact ? "text-[12px]" : "px-3"} ${tabBtnWidth}`
+                  : `ui-btn ui-btn-sm min-w-0 !justify-start gap-0 px-2.5 text-left ${compact ? "text-[12px]" : "px-3"} ${tabBtnWidth}`
               }
             >
-              {item.label}
+              <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
             </button>
           );
         })}

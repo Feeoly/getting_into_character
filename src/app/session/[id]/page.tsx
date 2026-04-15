@@ -8,6 +8,9 @@ import { getEffectiveRoleCardText, type Session } from "../../_lib/sessionTypes"
 import { getLatestJobForSession } from "./rehearsal/_lib/transcription/transcriptRepo";
 import type { TranscriptionJobRow } from "./rehearsal/_lib/transcription/transcriptionTypes";
 import { BackToHomeLink } from "../../_ui/BackToHomeLink";
+import { PageHeaderGlobalRow } from "../../_ui/PageHeaderActions";
+import { AlertDialog } from "../../_ui/AlertDialog";
+import { ConfirmDialog } from "../../_ui/ConfirmDialog";
 import { SessionMeta } from "../../_ui/SessionMeta";
 import { role } from "./_lib/roleCopy";
 import { RoleCardReadOnly } from "./_ui/RoleCardReadOnly";
@@ -26,17 +29,26 @@ export default function SessionDetailPage({
   const [latestJob, setLatestJob] = useState<TranscriptionJobRow | null | undefined>(
     undefined,
   );
+  const [deleteSessionOpen, setDeleteSessionOpen] = useState(false);
+  const [rehearsalSoftOpen, setRehearsalSoftOpen] = useState(false);
+  const [alertPayload, setAlertPayload] = useState<{
+    title: string;
+    description: string;
+    afterClose?: () => void;
+  } | null>(null);
 
-  function onDeleteSession() {
-    if (!window.confirm(review.confirmDeleteSession)) return;
+  function performDeleteSession() {
     void (async () => {
       const r = await deleteSessionCascade(id);
       if (!r.ok) {
-        window.alert(r.error.message);
+        setAlertPayload({ title: review.dialogErrorTitle, description: r.error.message });
         return;
       }
-      window.alert(review.deleteSessionDone);
-      router.push("/");
+      setAlertPayload({
+        title: review.dialogAlertTitle,
+        description: review.deleteSessionDone,
+        afterClose: () => router.push("/"),
+      });
     })();
   }
 
@@ -44,13 +56,20 @@ export default function SessionDetailPage({
     if (!session) return;
     const card = getEffectiveRoleCardText(session);
     if (!card) {
-      window.alert(role.rehearsalNoCard);
+      setAlertPayload({ title: review.dialogAlertTitle, description: role.rehearsalNoCard });
       document.getElementById("role-card-readonly")?.scrollIntoView({ behavior: "smooth" });
       return;
     }
     if (card && !session.roleReadAloudCompletedAt) {
-      if (!window.confirm(role.rehearsalSoftBlock)) return;
+      setRehearsalSoftOpen(true);
+      return;
     }
+    router.push(`/session/${session.id}/rehearsal`);
+  }
+
+  function confirmEnterRehearsalAnyway() {
+    if (!session) return;
+    setRehearsalSoftOpen(false);
     router.push(`/session/${session.id}/rehearsal`);
   }
 
@@ -90,21 +109,58 @@ export default function SessionDetailPage({
     <main className="px-6 py-8 md:px-12 md:py-12">
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 space-y-3">
+            <PageHeaderGlobalRow className="w-full justify-between gap-2">
+              <BackToHomeLink />
+              {session ? (
+                <button
+                  type="button"
+                  onClick={() => setDeleteSessionOpen(true)}
+                  className="ui-btn ui-btn-sm shrink-0 px-4"
+                >
+                  {review.deleteSession}
+                </button>
+              ) : null}
+            </PageHeaderGlobalRow>
             <h1 className="text-[22px] font-semibold leading-[1.25] text-ink">会话</h1>
-            <p className="mt-2 max-w-xl text-sm leading-snug text-ink-muted">
+            <p className="max-w-xl text-sm leading-snug text-ink-muted">
               先朗读角色卡，再打板录制，可多次打板录制，每轮打板记录都会被记录和复盘
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
-            <BackToHomeLink />
-            {session ? (
-              <button type="button" onClick={onDeleteSession} className="ui-btn ui-btn-sm px-4">
-                {review.deleteSession}
-              </button>
-            ) : null}
-          </div>
         </div>
+
+        <ConfirmDialog
+          open={deleteSessionOpen}
+          title={review.deleteSession}
+          description={review.confirmDeleteSession}
+          cancelLabel={review.dialogCancel}
+          confirmLabel={review.dialogConfirmDelete}
+          danger
+          onClose={() => setDeleteSessionOpen(false)}
+          onConfirm={performDeleteSession}
+        />
+
+        <ConfirmDialog
+          open={rehearsalSoftOpen}
+          title={review.dialogAlertTitle}
+          description={role.rehearsalSoftBlock}
+          cancelLabel={review.dialogCancel}
+          confirmLabel={review.dialogConfirmEnterRehearsalAnyway}
+          onClose={() => setRehearsalSoftOpen(false)}
+          onConfirm={confirmEnterRehearsalAnyway}
+        />
+
+        <AlertDialog
+          open={!!alertPayload}
+          title={alertPayload?.title ?? ""}
+          description={alertPayload?.description ?? ""}
+          okLabel={review.dialogOk}
+          onClose={() => {
+            const next = alertPayload?.afterClose;
+            setAlertPayload(null);
+            next?.();
+          }}
+        />
 
         <div className="mt-8 space-y-6">
           {notFound ? (
@@ -135,7 +191,11 @@ export default function SessionDetailPage({
                       进入排练室开始新的录制；结束后录音与转写会出现在「排练记录」中。
                     </div>
                   </div>
-                  <button type="button" onClick={onEnterRehearsal} className="ui-btn shrink-0 px-6">
+                  <button
+                    type="button"
+                    onClick={onEnterRehearsal}
+                    className="ui-btn ui-btn-page-header-gradient shrink-0 px-6"
+                  >
                     进入排练
                   </button>
                 </div>

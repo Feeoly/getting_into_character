@@ -11,6 +11,9 @@ export const PAUSE_THRESHOLD_MIN_MS = 1000;
 export const PAUSE_THRESHOLD_MAX_MS = 30000;
 export const PAUSE_THRESHOLD_DEFAULT_MS = 5000;
 
+/** 单会话排练设置中保留的上传背景张数上限（超出时删最旧 Blob） */
+export const UPLOADED_BACKGROUND_LIST_MAX = 24;
+
 export const REHEARSAL_SETTINGS_SCHEMA = z.object({
   sessionId: z.string().min(1),
   pauseThresholdMs: z
@@ -22,7 +25,14 @@ export const REHEARSAL_SETTINGS_SCHEMA = z.object({
   backgroundSource: BACKGROUND_SOURCE_SCHEMA,
   presetId: z.string().min(1).optional(),
   uploadedBackgroundId: z.string().min(1).optional(),
+  /** 本会话已上传的背景图 id（新上传追加，当前展示用 uploadedBackgroundId） */
+  uploadedBackgroundIds: z
+    .array(z.string().min(1))
+    .max(UPLOADED_BACKGROUND_LIST_MAX)
+    .optional(),
   cameraEnabled: z.boolean(),
+  /** 预置视频：true 循环；false 单次，播完后再点「预置循环视频 1/2」重播 */
+  presetVideoLoop: z.boolean().default(true),
   updatedAt: z.number().int().nonnegative().optional(),
 });
 
@@ -38,6 +48,7 @@ export function makeDefaultRehearsalSettings(sessionId: string): RehearsalSettin
     backgroundSource: "preset_image",
     presetId: "bg-1",
     cameraEnabled: false,
+    presetVideoLoop: true,
     updatedAt: Date.now(),
   };
 }

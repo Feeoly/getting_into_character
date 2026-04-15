@@ -27,19 +27,23 @@ export function SessionRow({
   return (
     <Link
       href={`/session/${session.id}`}
-      className="flex min-h-0 min-w-0 flex-col gap-3 overflow-hidden rounded-[var(--radius-card)] bg-surface px-4 py-3 transition hover:brightness-[1.02]"
+      className="flex min-h-[6.25rem] min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] bg-surface px-5 py-5 transition-colors hover:bg-ink/[0.04] sm:min-h-[6.75rem]"
     >
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          <span className="text-sm font-semibold text-ink">{sceneTitle}</span>
-          {session.name ? (
-            <span className="text-xs font-semibold text-ink-subtle">· {session.name}</span>
-          ) : null}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 pr-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span className="text-sm font-semibold text-ink">{sceneTitle}</span>
+            {session.name ? (
+              <span className="text-xs font-semibold text-ink-subtle">· {session.name}</span>
+            ) : null}
+          </div>
         </div>
-        <div className="mt-1 text-xs text-ink-muted">{formatDate(session.createdAt)}</div>
+        <div className="shrink-0 self-start pt-px">
+          <PrimaryProgressBadge session={session} latestJob={latestJob} />
+        </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <PrimaryProgressBadge session={session} latestJob={latestJob} />
+      <div className="mt-auto pt-4 text-xs text-ink-muted">
+        <time dateTime={new Date(session.createdAt).toISOString()}>{formatDate(session.createdAt)}</time>
       </div>
     </Link>
   );

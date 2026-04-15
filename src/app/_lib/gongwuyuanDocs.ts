@@ -10,6 +10,7 @@ const ALLOWED: ReadonlySet<GongwuyuanCollection> = new Set([
   "history_exams",
   "predict_exams",
   "predict_exams_simple",
+  "predict_exams_story",
 ]);
 
 /** 服务端读取 gongwuyuan下某一目录的全部 .md（按中文文件名排序） */

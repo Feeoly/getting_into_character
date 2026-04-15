@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
+import { AlertDialog } from "../../../../_ui/AlertDialog";
 import { BackToHomeLink } from "../../../../_ui/BackToHomeLink";
+import {
+  ContextActionsWithDivider,
+  PageHeaderGlobalRow,
+} from "../../../../_ui/PageHeaderActions";
+import { ConfirmDialog } from "../../../../_ui/ConfirmDialog";
 import { acknowledgeSessionReview, getSessionById } from "../../../../_lib/sessionRepo";
 import type { Session } from "../../../../_lib/sessionTypes";
 import { listPauseEventsForTake } from "../../rehearsal/_lib/rehearsalRepo";
@@ -13,10 +19,12 @@ import type { PauseEvent } from "../../rehearsal/_lib/rehearsalTypes";
 import {
   deleteTakeData,
   getLatestJobForTake,
+  hasPendingJobForTake,
   listSegmentsForTake,
 } from "../../rehearsal/_lib/transcription/transcriptRepo";
 import type { TranscriptSegmentRow } from "../../rehearsal/_lib/transcription/transcriptionTypes";
 import { review, stt } from "../../rehearsal/_lib/transcription/sttCopy";
+import { startTranscriptionRunner } from "../../rehearsal/_lib/transcription/transcriptionRunner";
 import { downloadTextFile } from "./_lib/downloadText";
 import { ReviewChat } from "./_ui/ReviewChat";
 
@@ -88,6 +96,14 @@ export default function ReviewPage({
   const [mediaKind, setMediaKind] = useState<"audio" | "video" | null>(null);
   const mediaRef = useRef<HTMLMediaElement | null>(null);
   const [activeSegId, setActiveSegId] = useState<string | null>(null);
+  const [deleteTakeOpen, setDeleteTakeOpen] = useState(false);
+  const [alertPayload, setAlertPayload] = useState<{
+    title: string;
+    description: string;
+    afterClose?: () => void;
+  } | null>(null);
+  const [sttPending, setSttPending] = useState(false);
+  const [tick, setTick] = useState(0);
 
   const takeOk = takeIdSchema.safeParse(takeId).success;
 
@@ -102,6 +118,10 @@ export default function ReviewPage({
         : pauses.map((p) => pauseLabel(p)).join("\n"),
     [pauses],
   );
+
+  useEffect(() => {
+    startTranscriptionRunner();
+  }, []);
 
   useEffect(() => {
     if (!takeOk) {
@@ -125,16 +145,24 @@ export default function ReviewPage({
 
   useEffect(() => {
     if (!takeOk || notFound) return;
+    const t = window.setInterval(() => setTick((x) => x + 1), 2000);
+    return () => window.clearInterval(t);
+  }, [takeOk, notFound]);
+
+  useEffect(() => {
+    if (!takeOk || notFound) return;
     let cancelled = false;
     (async () => {
-      const [segs, ps, job] = await Promise.all([
+      const [segs, ps, job, pending] = await Promise.all([
         listSegmentsForTake(id, takeId),
         listPauseEventsForTake(id, takeId),
         getLatestJobForTake(id, takeId),
+        hasPendingJobForTake(takeId),
       ]);
       if (cancelled) return;
       setSegments(segs);
       setPauses(ps);
+      setSttPending(pending);
       if (job?.audioBlob && job.audioBlob.size > 0) {
         const mime = job.mimeType.toLowerCase();
         const k = mime.startsWith("video/") ? "video" : "audio";
@@ -160,7 +188,7 @@ export default function ReviewPage({
     return () => {
       cancelled = true;
     };
-  }, [id, takeId, takeOk, notFound]);
+  }, [id, takeId, takeOk, notFound, tick]);
 
   useEffect(() => {
     return () => {
@@ -178,15 +206,20 @@ export default function ReviewPage({
     void el.play().catch(() => {});
   }
 
-  function onDeleteTake() {
-    if (!window.confirm(review.confirmDeleteTake)) return;
+  function performDeleteTake() {
     void (async () => {
       try {
         await deleteTakeData(id, takeId);
-        window.alert(review.deleteTakeDone);
-        router.push(`/session/${id}`);
+        setAlertPayload({
+          title: review.dialogAlertTitle,
+          description: review.deleteTakeDone,
+          afterClose: () => router.push(`/session/${id}`),
+        });
       } catch {
-        window.alert("删除失败，请重试。");
+        setAlertPayload({
+          title: review.dialogErrorTitle,
+          description: review.deleteTakeError,
+        });
       }
     })();
   }
@@ -222,21 +255,52 @@ export default function ReviewPage({
 
   return (
     <main className="min-h-dvh px-6 py-8 md:px-12 md:py-12">
-      <div className="mx-auto max-w-4xl">
-        <header className="flex items-start gap-4 pb-4">
-          <div className="min-w-0 flex-1">
+      <div className="mx-auto max-w-6xl">
+        <header className="flex flex-col gap-4 pb-4 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+          <div className="min-w-0 flex-1 space-y-3">
+            <PageHeaderGlobalRow>
+              <BackToHomeLink variant="toolbar" />
+              <Link href={`/session/${id}`} className="ui-btn ui-btn-sm ui-btn-equal px-4">
+                {review.backToSession}
+              </Link>
+            </PageHeaderGlobalRow>
             <h1 className="text-[20px] font-semibold leading-[1.2] text-ink">{review.pageTitle}</h1>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-            <BackToHomeLink variant="toolbar" />
-            <Link href={`/session/${id}`} className="ui-btn ui-btn-equal px-4">
-              {review.backToSession}
-            </Link>
-            <button type="button" onClick={onDeleteTake} className="ui-btn ui-btn-equal px-4">
-              {review.deleteTake}
-            </button>
+          <div className="shrink-0 lg:max-w-[min(100%,24rem)] lg:pt-0.5">
+            <ContextActionsWithDivider>
+              <button
+                type="button"
+                onClick={() => setDeleteTakeOpen(true)}
+                className="ui-btn ui-btn-sm ui-btn-equal px-4"
+              >
+                {review.deleteTake}
+              </button>
+            </ContextActionsWithDivider>
           </div>
         </header>
+
+        <ConfirmDialog
+          open={deleteTakeOpen}
+          title={review.deleteTake}
+          description={review.confirmDeleteTake}
+          cancelLabel={review.dialogCancel}
+          confirmLabel={review.dialogConfirmDelete}
+          danger
+          onClose={() => setDeleteTakeOpen(false)}
+          onConfirm={performDeleteTake}
+        />
+
+        <AlertDialog
+          open={!!alertPayload}
+          title={alertPayload?.title ?? ""}
+          description={alertPayload?.description ?? ""}
+          okLabel={review.dialogOk}
+          onClose={() => {
+            const next = alertPayload?.afterClose;
+            setAlertPayload(null);
+            next?.();
+          }}
+        />
 
         {!session ? (
           <div className="mt-6 text-sm text-ink-muted">加载中…</div>
@@ -244,20 +308,24 @@ export default function ReviewPage({
           <div className="mt-6 flex flex-col gap-6 lg:flex-row">
             <div className="min-w-0 flex-1 space-y-4">
               {mediaUrl && mediaKind === "video" ? (
-                <video
-                  ref={(el) => {
-                    mediaRef.current = el;
-                  }}
-                  className="w-full rounded-2xl bg-black"
-                  src={mediaUrl}
-                  controls
-                  playsInline
-                  onTimeUpdate={(e) => {
-                    const t = e.currentTarget.currentTime * 1000;
-                    const cur = segments.find((s) => t >= s.start_ms && t < s.end_ms);
-                    setActiveSegId(cur?.id ?? null);
-                  }}
-                />
+                /* 固定 16:9 占位，避免 metadata/首帧加载后高度突变导致 CLS */
+                <div className="relative w-full overflow-hidden rounded-2xl bg-black aspect-video">
+                  <video
+                    ref={(el) => {
+                      mediaRef.current = el;
+                    }}
+                    className="h-full w-full object-contain"
+                    src={mediaUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    onTimeUpdate={(e) => {
+                      const t = e.currentTarget.currentTime * 1000;
+                      const cur = segments.find((s) => t >= s.start_ms && t < s.end_ms);
+                      setActiveSegId(cur?.id ?? null);
+                    }}
+                  />
+                </div>
               ) : null}
               {mediaUrl && mediaKind === "audio" ? (
                 <audio
@@ -277,8 +345,22 @@ export default function ReviewPage({
 
               <div className="rounded-[var(--radius-card)] bg-surface px-4 py-4 md:px-6 md:py-5">
                 <h2 className="text-sm font-semibold text-ink">{review.transcriptSection}</h2>
+                {sttPending ? (
+                  <div
+                    className="mt-3 rounded-lg border border-ink/15 bg-ink/[0.04] px-3 py-3 text-sm"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <div className="font-medium text-ink">{stt.summaryLoading}</div>
+                    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-ink/10">
+                      <div className="h-full w-2/5 animate-pulse rounded-full bg-ink/35" />
+                    </div>
+                  </div>
+                ) : null}
                 {segments.length === 0 ? (
-                  <p className="mt-3 text-sm text-ink-muted">{stt.emptyFull}</p>
+                  sttPending ? null : (
+                    <p className="mt-3 text-sm text-ink-muted">{stt.emptyFull}</p>
+                  )
                 ) : (
                   <ul className="mt-3 space-y-2">
                     {segments.map((s) => (
@@ -306,7 +388,7 @@ export default function ReviewPage({
               </div>
             </div>
 
-            <aside className="w-full shrink-0 space-y-4 lg:w-[min(100%,280px)]">
+            <aside className="w-full shrink-0 space-y-4 lg:w-[min(100%,400px)] xl:w-[min(100%,440px)]">
               <div className="rounded-[var(--radius-card)] bg-page px-4 py-4">
                 <h2 className="text-sm font-semibold text-ink">{review.pauseSectionTitle}</h2>
                 {pauses.length === 0 ? (

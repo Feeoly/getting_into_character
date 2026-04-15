@@ -7,6 +7,7 @@ const collectionSchema = z.enum([
   "history_exams",
   "predict_exams",
   "predict_exams_simple",
+  "predict_exams_story",
 ]);
 
 export async function GET(req: Request) {

@@ -14,6 +14,27 @@ import {
   type UploadedBackground,
 } from "./rehearsalTypes";
 
+/** 同步「当前 id」与 id 列表，兼容仅有 uploadedBackgroundId 的旧数据 */
+export function mergeUploadedBackgroundFields(s: RehearsalSettings): RehearsalSettings {
+  const rawList = s.uploadedBackgroundIds;
+  const listFromField =
+    Array.isArray(rawList) && rawList.length > 0
+      ? rawList.filter((x): x is string => typeof x === "string" && x.length > 0)
+      : [];
+  const ids = [...new Set(listFromField)];
+  if (s.uploadedBackgroundId && !ids.includes(s.uploadedBackgroundId)) {
+    ids.push(s.uploadedBackgroundId);
+  }
+  if (ids.length === 0) {
+    return { ...s, uploadedBackgroundId: undefined, uploadedBackgroundIds: undefined };
+  }
+  let active = s.uploadedBackgroundId;
+  if (!active || !ids.includes(active)) {
+    active = ids[ids.length - 1]!;
+  }
+  return { ...s, uploadedBackgroundId: active, uploadedBackgroundIds: ids };
+}
+
 function clampInt(n: number, min: number, max: number): number {
   const v = Math.round(n);
   return Math.max(min, Math.min(max, v));
@@ -34,20 +55,23 @@ function coerceSettings(
     ? (input.backgroundSource as RehearsalSettings["backgroundSource"])
     : base.backgroundSource;
 
-  const next: RehearsalSettings = {
+  const next = mergeUploadedBackgroundFields({
     ...base,
     ...input,
+    sessionId: input.sessionId,
     pauseThresholdMs,
     pausePromptEnabled:
       typeof input.pausePromptEnabled === "boolean"
         ? input.pausePromptEnabled
         : base.pausePromptEnabled,
+    presetVideoLoop:
+      typeof input.presetVideoLoop === "boolean" ? input.presetVideoLoop : base.presetVideoLoop,
     backgroundSource,
     updatedAt: Date.now(),
-  };
+  });
 
   const parsed = REHEARSAL_SETTINGS_SCHEMA.safeParse(next);
-  return parsed.success ? parsed.data : base;
+  return parsed.success ? mergeUploadedBackgroundFields(parsed.data) : base;
 }
 
 export async function getRehearsalSettings(
@@ -58,7 +82,7 @@ export async function getRehearsalSettings(
     if (!row) return makeDefaultRehearsalSettings(sessionId);
 
     const parsed = REHEARSAL_SETTINGS_SCHEMA.safeParse(row);
-    if (parsed.success) return parsed.data;
+    if (parsed.success) return mergeUploadedBackgroundFields(parsed.data);
 
     return makeDefaultRehearsalSettings(sessionId);
   } catch {
@@ -106,6 +130,10 @@ export async function saveUploadedBackground(input: {
 
   await db.uploadedBackgrounds.put(parsed.data);
   return id;
+}
+
+export async function deleteUploadedBackground(id: string): Promise<void> {
+  await db.uploadedBackgrounds.delete(id);
 }
 
 export async function getUploadedBackground(id: string): Promise<UploadedBackground | null> {

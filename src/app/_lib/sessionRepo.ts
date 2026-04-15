@@ -226,8 +226,16 @@ export async function deleteSessionCascade(sessionId: string): Promise<RepoResul
       ],
       async () => {
         const settings = await db.rehearsalSettings.get(sessionId);
-        if (settings?.uploadedBackgroundId) {
-          await db.uploadedBackgrounds.delete(settings.uploadedBackgroundId);
+        const uploadIds = new Set<string>();
+        if (settings?.uploadedBackgroundId) uploadIds.add(settings.uploadedBackgroundId);
+        const list = settings?.uploadedBackgroundIds;
+        if (Array.isArray(list)) {
+          for (const x of list) {
+            if (typeof x === "string" && x.length > 0) uploadIds.add(x);
+          }
+        }
+        for (const bid of uploadIds) {
+          await db.uploadedBackgrounds.delete(bid);
         }
         await db.transcriptSegments.where("sessionId").equals(sessionId).delete();
         await db.transcriptionJobs.where("sessionId").equals(sessionId).delete();

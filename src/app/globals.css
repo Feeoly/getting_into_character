@@ -98,7 +98,8 @@ body {
     transition: background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
   }
 
-  .ui-btn:hover:not(:disabled) {
+  /* 勿作用于 .ui-btn-on：否则黑底白字会变成浅底+浅色字，对比度崩溃 */
+  .ui-btn:hover:not(:disabled):not(.ui-btn-page-header-gradient):not(.ui-btn-on) {
     background: rgb(0 0 0 / 0.05);
   }
 
@@ -126,12 +127,18 @@ body {
     background: var(--color-page);
   }
 
-  .ui-btn-surface:hover:not(:disabled) {
+  .ui-btn-surface:hover:not(:disabled):not(.ui-btn-on) {
     background: var(--color-surface);
   }
 
   .ui-btn-surface.ui-btn-on {
     background: var(--color-ink);
+    color: var(--color-page);
+  }
+
+  /* 高于上一行 hover，避免「奶油面 + 选中态」悬停时被刷成白底 */
+  .ui-btn-surface.ui-btn-on:hover:not(:disabled) {
+    background: rgb(0 0 0 / 0.88);
     color: var(--color-page);
   }
 
@@ -151,5 +158,31 @@ body {
 
   .ui-btn-sm.ui-btn-equal {
     min-width: 5rem;
+  }
+
+  /* 与 body 顶区同源：奶油遮罩 + 粉绿竖条（会话详情「进入排练」主按钮） */
+  .ui-btn.ui-btn-page-header-gradient {
+    background-color: var(--color-page);
+    background-image:
+      linear-gradient(
+        to bottom,
+        #faf9f600 0%,
+        #faf9f60f 4vh,
+        #faf9f638 10vh,
+        #faf9f680 18vh,
+        #faf9f6c7 28vh,
+        #faf9f6f0 38vh,
+        var(--color-page) 48vh,
+        var(--color-page) 100%
+      ),
+      linear-gradient(to top, var(--gradient-header-low), var(--gradient-header-high));
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: top, top;
+    transition: filter 0.15s ease, opacity 0.15s ease;
+  }
+
+  .ui-btn.ui-btn-page-header-gradient:hover:not(:disabled) {
+    filter: brightness(0.96);
   }
 }

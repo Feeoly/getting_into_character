@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { use, useEffect, useMemo, useRef, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { BackToHomeLink } from "../../../_ui/BackToHomeLink";
+import { PageHeaderGlobalRow } from "../../../_ui/PageHeaderActions";
 import { getSessionById } from "../../../_lib/sessionRepo";
 import type { Session } from "../../../_lib/sessionTypes";
 import {
+  deleteUploadedBackground,
   getRehearsalSettings,
   getUploadedBackground,
   saveRehearsalSettings,
   saveUploadedBackground,
 } from "./_lib/rehearsalRepo";
+import { UPLOADED_BACKGROUND_LIST_MAX } from "./_lib/rehearsalTypes";
 import type { RehearsalSettings } from "./_lib/rehearsalTypes";
 import type { StopRecordingResult } from "./_lib/recording";
 import { SettingsDrawer } from "./_ui/SettingsDrawer";
@@ -28,10 +31,22 @@ import { ROLE_MOOD_LABELS, role as roleCopy } from "../_lib/roleCopy";
 import { stt } from "./_lib/transcription/sttCopy";
 import { createPauseDetector } from "./_lib/pauseDetector";
 import { addPauseEvent } from "./_lib/rehearsalRepo";
+import {
+  presetImagePublicPath,
+  presetVideoPublicPath,
+  REHEARSAL_BG_VIDEO_REPLAY_EVENT,
+} from "./_lib/presetBackgrounds";
 
-function bgImageSrc(presetId: string | undefined): string {
-  if (presetId === "bg-2") return "/rehearsal/backgrounds/bg-2.png";
-  return "/rehearsal/backgrounds/bg-1.jpg";
+function RehearsalToolbarSettingsButton({ onOpen }: { onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="ui-btn ui-btn-equal ui-btn-surface px-4 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
+    >
+      设置
+    </button>
+  );
 }
 
 export default function RehearsalPage({ params }: { params: Promise<{ id: string }> }) {
@@ -57,21 +72,37 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
   const [uploadedBgUrl, setUploadedBgUrl] = useState<string | null>(null);
   const uploadedBgUrlRef = useRef<string | null>(null);
   const enqueuedTakeIdsRef = useRef<Set<string>>(new Set());
+  const videoBgRef = useRef<HTMLVideoElement>(null);
 
-  const uploadedBackgroundAvailable = Boolean(settings?.uploadedBackgroundId);
+  const uploadedBackgroundAvailable = Boolean(
+    settings?.uploadedBackgroundId || (settings?.uploadedBackgroundIds?.length ?? 0) > 0,
+  );
+
+  const replayBackgroundVideo = useCallback(() => {
+    const el = videoBgRef.current;
+    if (!el) return;
+    el.currentTime = 0;
+    void el.play();
+  }, []);
+
+  useEffect(() => {
+    const onReplay = () => replayBackgroundVideo();
+    window.addEventListener(REHEARSAL_BG_VIDEO_REPLAY_EVENT, onReplay);
+    return () => window.removeEventListener(REHEARSAL_BG_VIDEO_REPLAY_EVENT, onReplay);
+  }, [replayBackgroundVideo]);
 
   const background = useMemo(() => {
-    if (!settings) return { kind: "image" as const, src: "/rehearsal/backgrounds/bg-1.jpg" };
+    if (!settings) return { kind: "image" as const, src: presetImagePublicPath(undefined) };
 
     if (settings.backgroundSource === "preset_video") {
-      return { kind: "video" as const, src: "/rehearsal/backgrounds/bg-loop.mp4" };
+      return { kind: "video" as const, src: presetVideoPublicPath(settings.presetId) };
     }
 
     if (settings.backgroundSource === "upload_image" && uploadedBgUrl) {
       return { kind: "image" as const, src: uploadedBgUrl };
     }
 
-    return { kind: "image" as const, src: bgImageSrc(settings.presetId) };
+    return { kind: "image" as const, src: presetImagePublicPath(settings.presetId) };
   }, [settings, uploadedBgUrl]);
 
   useEffect(() => {
@@ -212,7 +243,7 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
     return () => {
       cancelled = true;
     };
-  }, [settings?.uploadedBackgroundId]);
+  }, [settings?.uploadedBackgroundId, settings?.uploadedBackgroundIds]);
 
   useEffect(() => {
     return subscribeTranscriptionModelLoading(setModelLoading);
@@ -254,10 +285,26 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
         filename: file.name,
         mimeType: file.type,
       });
+      const existing =
+        settings.uploadedBackgroundIds && settings.uploadedBackgroundIds.length > 0
+          ? [...settings.uploadedBackgroundIds]
+          : settings.uploadedBackgroundId
+            ? [settings.uploadedBackgroundId]
+            : [];
+      let nextIds = existing.includes(id) ? existing : [...existing, id];
+      if (nextIds.length > UPLOADED_BACKGROUND_LIST_MAX) {
+        const overflow = nextIds.length - UPLOADED_BACKGROUND_LIST_MAX;
+        const removed = nextIds.slice(0, overflow);
+        nextIds = nextIds.slice(overflow);
+        for (const oid of removed) {
+          if (oid !== id) await deleteUploadedBackground(oid);
+        }
+      }
       await persist({
         ...settings,
         backgroundSource: "upload_image",
         uploadedBackgroundId: id,
+        uploadedBackgroundIds: nextIds,
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : "上传失败。请重试。";
@@ -267,15 +314,17 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
 
   return (
     <main className="relative min-h-dvh text-white">
-      {/* 全屏沉浸背景（fixed 避免与 flex 子项高度互相影响导致不铺满） */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-        {background.kind === "video" ? (
+      {/* 相对 main 铺满：main 在根布局 flex-1 内，真题分屏时主列变窄，背景随之被挤缩（勿用 fixed 贴视口） */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        {background.kind === "video" && settings ? (
           <video
-            className="h-full w-full object-cover"
+            ref={videoBgRef}
+            key={background.src}
+            className="pointer-events-none h-full w-full object-cover"
             src={background.src}
             autoPlay
             muted
-            loop
+            loop={settings.presetVideoLoop}
             playsInline
           />
         ) : (
@@ -292,42 +341,59 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
 
       <div className="relative z-10 flex min-h-dvh flex-col px-4 pb-6 pt-4 md:px-8 md:pb-8 md:pt-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-[20px] font-semibold leading-[1.2] tracking-tight drop-shadow-sm">
-              排练
-            </h1>
-            <div className="mt-1 max-w-md text-sm text-white/85 drop-shadow-sm">
-              内容默认保存在本地，不会上传。背景铺满全屏；会话与录制面板在右下角，预览可拖动。
+          <div className="min-w-0 space-y-3">
+            <PageHeaderGlobalRow>
+              <BackToHomeLink variant="onDarkToolbar" />
+              <Link
+                href={`/session/${id}`}
+                className="ui-btn ui-btn-sm ui-btn-equal ui-btn-surface px-4 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
+              >
+                返回会话
+              </Link>
+            </PageHeaderGlobalRow>
+            <div>
+              <h1 className="text-[20px] font-semibold leading-[1.2] tracking-tight drop-shadow-sm">
+                排练
+              </h1>
+              {session?.roleTrigger ? (
+                <div className="mt-2 max-w-lg rounded-lg bg-black/35 px-3 py-2 text-xs text-white/90 shadow-sm backdrop-blur-md">
+                  <span className="font-semibold">{roleCopy.rehearsalBanner}：</span>
+                  {session.roleMoodPreset ? ROLE_MOOD_LABELS[session.roleMoodPreset] : null}
+                  {session.roleMoodCustom
+                    ? `${session.roleMoodPreset ? " · " : ""}${session.roleMoodCustom}`
+                    : null}
+                  <span className="text-white/85"> · 触发物：{session.roleTrigger}</span>
+                </div>
+              ) : null}
             </div>
-            {session?.roleTrigger ? (
-              <div className="mt-2 max-w-lg rounded-lg bg-black/35 px-3 py-2 text-xs text-white/90 shadow-sm backdrop-blur-md">
-                <span className="font-semibold">{roleCopy.rehearsalBanner}：</span>
-                {session.roleMoodPreset ? ROLE_MOOD_LABELS[session.roleMoodPreset] : null}
-                {session.roleMoodCustom
-                  ? `${session.roleMoodPreset ? " · " : ""}${session.roleMoodCustom}`
-                  : null}
-                <span className="text-white/85"> · 触发物：{session.roleTrigger}</span>
-              </div>
-            ) : null}
           </div>
 
-          <div className="flex shrink-0 flex-wrap justify-end gap-2">
-            <BackToHomeLink variant="onDarkToolbar" />
-            <Link
-              href={`/session/${id}`}
-              className="ui-btn ui-btn-equal ui-btn-surface px-4 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
-            >
-              返回会话
-            </Link>
-            <button
-              type="button"
-              onClick={() => setDrawerOpen(true)}
-              className="ui-btn ui-btn-equal ui-btn-surface px-4 focus-visible:!shadow-[0_0_0_2px_rgb(255_255_255/0.35),0_0_0_4px_var(--color-ink)]"
-            >
-              设置
-            </button>
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            {session && settings && !notFound ? (
+              <RecorderPanel
+                inlineToolbar
+                toolbarEnd={<RehearsalToolbarSettingsButton onOpen={() => setDrawerOpen(true)} />}
+                sessionId={id}
+                settings={settings}
+                liveStream={liveStream}
+                onLiveStreamChange={setLiveStream}
+                onPlaybackChange={setPlayback}
+                onRecordingSessionChange={(s) => {
+                  setRecordingEpochStartMs(s?.epochMs ?? null);
+                  currentRecordingTakeIdRef.current = s?.takeId ?? null;
+                }}
+              />
+            ) : (
+              <RehearsalToolbarSettingsButton onOpen={() => setDrawerOpen(true)} />
+            )}
           </div>
         </div>
+
+        {session && settings && !notFound && error ? (
+          <div className="mt-3 max-w-xl rounded-lg border border-red-400/35 bg-red-950/80 px-3 py-2 text-xs text-red-100 shadow-sm backdrop-blur-sm">
+            {error}
+          </div>
+        ) : null}
 
         {notFound ? (
           <div className="mt-8 flex flex-1 justify-center">
@@ -343,34 +409,6 @@ export default function RehearsalPage({ params }: { params: Promise<{ id: string
           <div className="mt-8 text-sm text-white/85 drop-shadow-sm">加载中…</div>
         ) : null}
       </div>
-
-      {session && settings && !notFound ? (
-        <div className="pointer-events-none fixed bottom-5 right-4 z-20 flex w-[min(100vw-2rem,22.5rem)] flex-col gap-3 sm:right-5 md:bottom-6 md:right-8">
-          <div className="pointer-events-auto rounded-2xl bg-black/40 px-5 py-4 shadow-lg backdrop-blur-md">
-            <div className="text-sm font-semibold">
-              {session.name ? `会话：${session.name}` : "会话已加载"}
-            </div>
-            <div className="mt-1 text-sm text-white/80">
-              先打开「设置」选好背景；需要看到自己时再开启摄像头。
-            </div>
-            {error ? <div className="mt-2 text-sm text-red-300">{error}</div> : null}
-          </div>
-
-          <div className="pointer-events-auto">
-            <RecorderPanel
-              sessionId={id}
-              settings={settings}
-              liveStream={liveStream}
-              onLiveStreamChange={setLiveStream}
-              onPlaybackChange={setPlayback}
-              onRecordingSessionChange={(s) => {
-                setRecordingEpochStartMs(s?.epochMs ?? null);
-                currentRecordingTakeIdRef.current = s?.takeId ?? null;
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
 
       {settings ? (
         <SettingsDrawer

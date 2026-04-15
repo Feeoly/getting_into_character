@@ -25,6 +25,10 @@ export const stt = {
   confirmRetranscribe:
     "将用当前音频重新生成转写并替换已有全文与摘要。确定继续？",
   retryNoBlob: "没有可用的本地录音，请进入排练重新录制后再试。",
+  /** 全文页：新 job 排队/处理中，旧片段仍显示时顶栏提示 */
+  retranscribeInProgress: "正在重新转写，完成后将替换下方全文…",
+  /** 全文页：重新转写 job 成功结束 */
+  retranscribeDoneOk: "重新转写已完成，下方全文已更新。",
 } as const;
 
 export function previewSnippet(text: string, max = 140): string {
@@ -52,6 +56,15 @@ export const review = {
   confirmDeleteSession: "将永久删除本场会话的全部本地数据（含所有轮次、转写、停顿等），且不可恢复。确定继续？",
   deleteTakeDone: "已删除本轮数据。",
   deleteSessionDone: "已删除会话。",
+  dialogCancel: "取消",
+  dialogConfirmDelete: "确定删除",
+  dialogOk: "知道了",
+  dialogConfirmOk: "确定",
+  dialogAlertTitle: "提示",
+  dialogErrorTitle: "操作失败",
+  deleteTakeError: "删除失败，请重试。",
+  /** 未朗读仍进排练：确认主按钮 */
+  dialogConfirmEnterRehearsalAnyway: "仍要进入",
 } as const;
 
 export const ai = {

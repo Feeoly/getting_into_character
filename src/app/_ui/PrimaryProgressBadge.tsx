@@ -22,6 +22,9 @@ export function PrimaryProgressBadge({ session, latestJob }: Props) {
   }
 
   const kind = resolveSessionPrimaryProgress(session, latestJob);
+  // 复盘已看过不代表会话结束，仍可多轮排练；不显示「已完成」以免误解
+  if (kind === "done") return null;
+
   return (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${primaryProgressClassName(kind)}`}

@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
+import {
+  isPresetImageId,
+  PRESET_IMAGE_IDS,
+  PRESET_IMAGE_LABEL,
+  PRESET_VIDEO_IDS,
+  PRESET_VIDEO_LABEL,
+  REHEARSAL_BG_VIDEO_REPLAY_EVENT,
+} from "../_lib/presetBackgrounds";
+import { getUploadedBackground } from "../_lib/rehearsalRepo";
 import type { BackgroundSource, RehearsalSettings } from "../_lib/rehearsalTypes";
 
 type Props = {
@@ -22,6 +31,12 @@ function msFromSeconds(sec: number): number {
   return Math.max(1000, Math.min(30000, Math.round(sec) * 1000));
 }
 
+function orderedUploadIds(s: RehearsalSettings): string[] {
+  if (s.uploadedBackgroundIds?.length) return [...s.uploadedBackgroundIds];
+  if (s.uploadedBackgroundId) return [s.uploadedBackgroundId];
+  return [];
+}
+
 export function SettingsDrawer({
   open,
   settings,
@@ -37,10 +52,58 @@ export function SettingsDrawer({
   );
 
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [uploadPreviews, setUploadPreviews] = useState<
+    { id: string; url: string; label: string }[]
+  >([]);
+  const uploadBlobUrlsRef = useRef<string[]>([]);
+
+  const uploadIdsKey = useMemo(() => JSON.stringify(orderedUploadIds(settings)), [settings]);
 
   useEffect(() => {
     if (!open) setUploadBusy(false);
   }, [open]);
+
+  useEffect(() => {
+    for (const u of uploadBlobUrlsRef.current) URL.revokeObjectURL(u);
+    uploadBlobUrlsRef.current = [];
+    setUploadPreviews([]);
+
+    if (!open || settings.backgroundSource !== "upload_image") return;
+
+    const ids = orderedUploadIds(settings);
+    if (ids.length === 0) return;
+
+    let cancelled = false;
+    void (async () => {
+      const rows: { id: string; url: string; label: string }[] = [];
+      const urls: string[] = [];
+      for (const bid of ids) {
+        const row = await getUploadedBackground(bid);
+        if (!row || cancelled) continue;
+        const url = URL.createObjectURL(row.blob);
+        urls.push(url);
+        rows.push({
+          id: bid,
+          url,
+          label: row.filename?.trim() || `图片 ${rows.length + 1}`,
+        });
+      }
+      if (cancelled) {
+        for (const u of urls) URL.revokeObjectURL(u);
+        return;
+      }
+      uploadBlobUrlsRef.current = urls;
+      setUploadPreviews(rows);
+    })();
+
+    return () => {
+      cancelled = true;
+      for (const u of uploadBlobUrlsRef.current) URL.revokeObjectURL(u);
+      uploadBlobUrlsRef.current = [];
+    };
+    // uploadIdsKey 已含上传 id 列表；不依赖整份 settings，避免改阈值等时重复解码图片
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, settings.backgroundSource, uploadIdsKey]);
 
   if (!open) return null;
 
@@ -59,18 +122,17 @@ export function SettingsDrawer({
       onChange({
         ...settings,
         backgroundSource: source,
-        presetId: settings.presetId?.startsWith("bg-") ? settings.presetId : "bg-1",
-        uploadedBackgroundId: undefined,
+        presetId: isPresetImageId(settings.presetId) ? settings.presetId : "bg-1",
       });
       return;
     }
 
     if (source === "preset_video") {
+      const vid = settings.presetId;
       onChange({
         ...settings,
         backgroundSource: source,
-        presetId: "bg-loop",
-        uploadedBackgroundId: undefined,
+        presetId: vid === "bg-loop" || vid === "bg-loop-2" ? vid : "bg-loop",
       });
       return;
     }
@@ -83,7 +145,7 @@ export function SettingsDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[80]">
       <button
         type="button"
         aria-label="关闭设置"
@@ -157,14 +219,15 @@ export function SettingsDrawer({
 
               {settings.backgroundSource === "preset_image" ? (
                 <div className="ml-6 flex flex-wrap gap-2">
-                  {(["bg-1", "bg-2"] as const).map((id) => (
+                  {PRESET_IMAGE_IDS.map((id) => (
                     <button
                       key={id}
                       type="button"
+                      title={PRESET_IMAGE_LABEL[id]}
                       onClick={() => onChange({ ...settings, presetId: id })}
-                      className={`ui-btn px-4 ${settings.presetId === id ? "ui-btn-on" : ""}`}
+                      className={`ui-btn ui-btn-sm min-w-0 !justify-start gap-0 px-3 text-left max-w-[min(100%,14rem)] ${settings.presetId === id ? "ui-btn-on" : ""}`}
                     >
-                      {id.toUpperCase()}
+                      <span className="min-w-0 flex-1 truncate">{PRESET_IMAGE_LABEL[id]}</span>
                     </button>
                   ))}
                 </div>
@@ -177,8 +240,61 @@ export function SettingsDrawer({
                   checked={settings.backgroundSource === "preset_video"}
                   onChange={() => setBackgroundSource("preset_video")}
                 />
-                预置循环视频（离线）
+                预置视频（离线）
               </label>
+
+              {settings.backgroundSource === "preset_video" ? (
+                <div className="ml-6 space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {PRESET_VIDEO_IDS.map((id) => (
+                      <button
+                        key={id}
+                        type="button"
+                        title={PRESET_VIDEO_LABEL[id]}
+                        onClick={() => {
+                          if (
+                            settings.backgroundSource === "preset_video" &&
+                            settings.presetId === id &&
+                            !settings.presetVideoLoop
+                          ) {
+                            window.dispatchEvent(new CustomEvent(REHEARSAL_BG_VIDEO_REPLAY_EVENT));
+                            return;
+                          }
+                          onChange({
+                            ...settings,
+                            backgroundSource: "preset_video",
+                            presetId: id,
+                          });
+                        }}
+                        className={`ui-btn ui-btn-sm min-w-0 !justify-start gap-0 px-3 text-left max-w-[min(100%,14rem)] ${settings.presetId === id ? "ui-btn-on" : ""}`}
+                      >
+                        <span className="min-w-0 flex-1 truncate">{PRESET_VIDEO_LABEL[id]}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="space-y-2 text-sm text-ink">
+                    <div className="text-xs font-medium text-ink-muted">播放方式</div>
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="radio"
+                        name="presetVideoLoop"
+                        checked={settings.presetVideoLoop}
+                        onChange={() => onChange({ ...settings, presetVideoLoop: true })}
+                      />
+                      循环播放
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="radio"
+                        name="presetVideoLoop"
+                        checked={!settings.presetVideoLoop}
+                        onChange={() => onChange({ ...settings, presetVideoLoop: false })}
+                      />
+                      单次播放
+                    </label>
+                  </div>
+                </div>
+              ) : null}
 
               <label className="flex items-center gap-3 text-sm text-ink">
                 <input
@@ -194,9 +310,42 @@ export function SettingsDrawer({
                 <div className="ml-6">
                   <div className="text-sm text-ink-muted">
                     {uploadedBackgroundAvailable
-                      ? "已保存一张上传背景（本地）。"
+                      ? "多张图会保留在本地；点击下方缩略图可切换当前背景，新上传会加入列表。"
                       : "还没有上传背景。"}
                   </div>
+                  {uploadPreviews.length > 0 ? (
+                    <div className="mt-3">
+                      <div className="text-xs font-medium text-ink-muted">已上传（点击选用）</div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {uploadPreviews.map((p) => {
+                          const active = settings.uploadedBackgroundId === p.id;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              title={p.label}
+                              onClick={() =>
+                                onChange({
+                                  ...settings,
+                                  backgroundSource: "upload_image",
+                                  uploadedBackgroundId: p.id,
+                                })
+                              }
+                              className={`rounded-xl p-0.5 ring-2 transition-shadow ${
+                                active ? "ring-ink shadow-md" : "ring-transparent hover:ring-ink/25"
+                              }`}
+                            >
+                              <img
+                                src={p.url}
+                                alt=""
+                                className="h-16 w-16 rounded-lg object-cover"
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="mt-3">
                     <input
                       type="file"
@@ -217,7 +366,7 @@ export function SettingsDrawer({
           <section className="rounded-2xl bg-page p-4">
             <div className="text-sm font-semibold text-ink">画面来源</div>
             <div className="mt-2 text-sm text-ink-muted">
-              默认仅录麦克风。需要看到自己时，可开启摄像头。
+              默认仅录麦克风。需要看到自己时，可开启摄像头
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-4">
@@ -231,10 +380,6 @@ export function SettingsDrawer({
               >
                 {settings.cameraEnabled ? "已开启" : "关闭"}
               </button>
-            </div>
-
-            <div className="mt-3 text-sm text-ink-muted">
-              点击「开始录制」后才会请求权限：先麦克风，若已开启摄像头会同时请求画面。
             </div>
           </section>
 

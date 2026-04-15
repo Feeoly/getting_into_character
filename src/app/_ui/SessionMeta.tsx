@@ -22,14 +22,25 @@ export function SessionMeta({ session, latestJob }: Props) {
   const sceneLabel = SESSION_SCENE_LABELS[session.scene];
 
   return (
-    <div className="rounded-[var(--radius-card)] bg-surface px-6 py-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="text-sm font-semibold text-ink">{sceneLabel}</div>
-          <div className="mt-1 text-xs text-ink-muted">{formatDate(session.createdAt)}</div>
-          <div className="mt-2 text-sm text-ink-muted">
+    <div className="rounded-[var(--radius-card)] bg-surface px-4 py-2.5">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-x-2 text-xs text-ink-muted">
+          <span className="shrink-0 text-sm font-semibold text-ink">{sceneLabel}</span>
+          <span className="shrink-0 text-ink-subtle" aria-hidden>
+            ·
+          </span>
+          <time
+            className="shrink-0 whitespace-nowrap"
+            dateTime={new Date(session.createdAt).toISOString()}
+          >
+            {formatDate(session.createdAt)}
+          </time>
+          <span className="shrink-0 text-ink-subtle" aria-hidden>
+            ·
+          </span>
+          <span className="min-w-0 truncate">
             备注：{session.name ?? "—"}
-          </div>
+          </span>
         </div>
 
         <div className="shrink-0">

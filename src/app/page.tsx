@@ -48,10 +48,20 @@ export default function Home() {
   return (
     <main className="px-6 py-8 md:px-12 md:py-12">
       <div className="mx-auto max-w-6xl">
-        <h1 className="text-[28px] font-semibold leading-[1.2] text-ink">入戏</h1>
-        <p className="mt-4 max-w-2xl text-[16px] leading-[1.5] text-ink-muted">
-          别去“面试”，去“演戏”
-        </p>
+        <header className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-semibold leading-[1.2] text-ink">入戏</h1>
+            <p className="mt-4 max-w-2xl text-[16px] leading-[1.5] text-ink-muted">
+              别去“面试”，去“演戏”
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-col items-stretch sm:items-end">
+            <PrimaryButton href="/session/new">开始</PrimaryButton>
+            <div className="mt-3 max-w-[280px] text-sm text-ink-muted sm:text-right">
+              内容默认保存在本地，不会上传云端
+            </div>
+          </div>
+        </header>
 
         <div className="mt-8 flex flex-col gap-10 lg:mt-10 lg:flex-row lg:items-start lg:gap-12">
           <div className="min-w-0 flex-1 text-[15px] leading-[1.65] text-ink-muted">
@@ -94,14 +104,7 @@ export default function Home() {
           </div>
 
           <div className="min-w-0 w-full shrink-0 lg:max-w-md xl:max-w-lg">
-            <div>
-              <PrimaryButton href="/session/new">开始</PrimaryButton>
-              <div className="mt-3 text-sm text-ink-muted">
-                内容默认保存在本地，不会上传云端
-              </div>
-            </div>
-
-            <section className="mt-10 lg:mt-8">
+            <section>
               <div className="text-[20px] font-semibold leading-[1.2] text-ink">
                 历史会话
               </div>
@@ -113,7 +116,7 @@ export default function Home() {
                 ) : (
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                     {rows.map(({ session, latestJob }) => (
-                      <div key={session.id} className="min-w-0">
+                      <div key={session.id} className="contents min-w-0">
                         <SessionRow session={session} latestJob={latestJob} />
                       </div>
                     ))}

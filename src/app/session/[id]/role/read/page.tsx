@@ -4,11 +4,17 @@ import Link from "next/link";
 import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { AlertDialog } from "../../../../_ui/AlertDialog";
 import { BackToHomeLink } from "../../../../_ui/BackToHomeLink";
+import {
+  ContextActionsWithDivider,
+  PageHeaderGlobalRow,
+} from "../../../../_ui/PageHeaderActions";
 import { getSessionById, markRoleReadAloudComplete } from "../../../../_lib/sessionRepo";
 import { getEffectiveRoleCardText, type Session } from "../../../../_lib/sessionTypes";
 import { plainTextForRoleCardTts } from "../../../../_lib/plainTextForRoleCardTts";
 import { role } from "../../_lib/roleCopy";
+import { review } from "../../rehearsal/_lib/transcription/sttCopy";
 import { RoleCardMarkdown } from "../../_ui/RoleCardMarkdown";
 
 export default function RoleReadPage({ params }: { params: Promise<{ id: string }> }) {
@@ -17,6 +23,10 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
   const [session, setSession] = useState<Session | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [alertPayload, setAlertPayload] = useState<{
+    title: string;
+    description: string;
+  } | null>(null);
   const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   useEffect(() => {
@@ -64,7 +74,10 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
     try {
       const res = await markRoleReadAloudComplete(id);
       if (!res.ok) {
-        window.alert(res.error.message);
+        setAlertPayload({
+          title: review.dialogErrorTitle,
+          description: res.error.message,
+        });
         return;
       }
       router.push(`/session/${id}/rehearsal`);
@@ -107,20 +120,31 @@ export default function RoleReadPage({ params }: { params: Promise<{ id: string 
     );
   }
 
-  return (
+   return (
     <main className="flex h-dvh max-h-dvh flex-col overflow-hidden px-6 py-6 md:px-12 md:py-8">
+      <AlertDialog
+        open={!!alertPayload}
+        title={alertPayload?.title ?? ""}
+        description={alertPayload?.description ?? ""}
+        okLabel={review.dialogOk}
+        onClose={() => setAlertPayload(null)}
+      />
       <div className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col">
-        <div className="flex shrink-0 items-start gap-4">
-          <div className="min-w-0 flex-1">
+        <div className="flex shrink-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+          <div className="min-w-0 flex-1 space-y-3">
+            <PageHeaderGlobalRow>
+              <BackToHomeLink variant="toolbar" />
+            </PageHeaderGlobalRow>
             <h1 className="text-[20px] font-semibold leading-[1.2] text-ink">
               {role.readPageTitle}
             </h1>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-            <BackToHomeLink variant="toolbar" />
-            <Link href={`/session/${id}`} className="ui-btn ui-btn-equal px-4">
-              {role.backToSession}
-            </Link>
+          <div className="shrink-0 lg:pt-0.5">
+            <ContextActionsWithDivider>
+              <Link href={`/session/${id}`} className="ui-btn ui-btn-sm ui-btn-equal px-4">
+                {role.backToSession}
+              </Link>
+            </ContextActionsWithDivider>
           </div>
         </div>
 
