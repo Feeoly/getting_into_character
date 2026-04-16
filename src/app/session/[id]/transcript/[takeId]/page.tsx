@@ -19,7 +19,10 @@ import {
   hasPendingJobForTake,
   listSegmentsForTake,
 } from "../../rehearsal/_lib/transcription/transcriptRepo";
-import type { TranscriptSegmentRow } from "../../rehearsal/_lib/transcription/transcriptionTypes";
+import type {
+  TranscriptSegmentRow,
+  TranscriptionJobRow,
+} from "../../rehearsal/_lib/transcription/transcriptionTypes";
 import { review, stt } from "../../rehearsal/_lib/transcription/sttCopy";
 import {
   retryTranscriptionForTake,
@@ -46,6 +49,7 @@ export default function TranscriptPage({
   const [notFound, setNotFound] = useState(false);
   const [badTake, setBadTake] = useState(false);
   const [segments, setSegments] = useState<TranscriptSegmentRow[]>([]);
+  const [latestJob, setLatestJob] = useState<TranscriptionJobRow | null>(null);
   const [sttPending, setSttPending] = useState(false);
   const [tick, setTick] = useState(0);
   const [resultBanner, setResultBanner] = useState<
@@ -109,9 +113,10 @@ export default function TranscriptPage({
     if (!takeOk || notFound) return;
     let cancelled = false;
     (async () => {
-      const [segs, pending] = await Promise.all([
+      const [segs, pending, job] = await Promise.all([
         listSegmentsForTake(id, takeId),
         hasPendingJobForTake(takeId),
+        getLatestJobForTake(id, takeId),
       ]);
       if (cancelled) return;
 
@@ -120,6 +125,7 @@ export default function TranscriptPage({
 
       setSegments(segs);
       setSttPending(pending);
+      setLatestJob(job);
 
       if (
         prevPending === true &&
@@ -209,7 +215,6 @@ export default function TranscriptPage({
             <h1 className="text-[20px] font-semibold leading-[1.2] text-ink">
               {stt.fullPageTitle}
             </h1>
-            <p className="text-sm text-ink-subtle">{stt.fullPageHint}</p>
           </div>
           <div className="shrink-0 lg:max-w-[min(100%,28rem)] lg:pt-0.5">
             <ContextActionsWithDivider>
@@ -263,6 +268,15 @@ export default function TranscriptPage({
           ) : null}
           {!session ? (
             <div className="text-sm text-ink-muted">加载中…</div>
+          ) : latestJob?.status === "failed" && !sttPending ? (
+            <div className="space-y-3 text-sm">
+              <p className="text-ink-muted">{stt.errorInline}</p>
+              {latestJob.errorMessage?.trim() ? (
+                <p className="rounded-lg border border-red-500/25 bg-red-500/10 px-3 py-2 text-ink-muted">
+                  {latestJob.errorMessage.trim()}
+                </p>
+              ) : null}
+            </div>
           ) : segments.length === 0 ? (
             <div className="text-sm text-ink-muted">{stt.emptyFull}</div>
           ) : (

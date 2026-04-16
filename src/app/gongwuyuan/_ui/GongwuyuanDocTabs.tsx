@@ -1,21 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 
 import type { GongwuyuanDocItem } from "../../_lib/gongwuyuanTypes";
 import { RoleCardMarkdown } from "../../session/[id]/_ui/RoleCardMarkdown";
+import { GwyGradientRing } from "./GwyGradientRing";
 
 type Props = {
   items: GongwuyuanDocItem[];
   /** 抽屉内：更紧凑的 Tab 与间距 */
   density?: "default" | "compact";
+  /** 真题悬浮面板内：区块与 Tab 使用渐变描边（与 GwyGradientRing 一致） */
+  gradientFrame?: boolean;
 };
 
-export function GongwuyuanDocTabs({ items, density = "default" }: Props) {
+export function GongwuyuanDocTabs({ items, density = "default", gradientFrame = false }: Props) {
   const [active, setActive] = useState(0);
   const compact = density === "compact";
 
   if (items.length === 0) {
+    if (gradientFrame) {
+      return (
+        <GwyGradientRing radius="card" className="w-full" innerClassName="bg-page">
+          <p className={`text-ink-muted ${compact ? "p-4 text-[14px]" : "p-5 text-[15px]"}`}>
+            该目录下暂无 Markdown 文档。
+          </p>
+        </GwyGradientRing>
+      );
+    }
     return (
       <p
         className={`rounded-[var(--radius-card)] text-ink-muted ${
@@ -45,9 +57,8 @@ export function GongwuyuanDocTabs({ items, density = "default" }: Props) {
       >
         {items.map((item, i) => {
           const selected = i === safeIndex;
-          return (
+          const tabBtn = (
             <button
-              key={item.id}
               type="button"
               role="tab"
               aria-selected={selected}
@@ -56,13 +67,29 @@ export function GongwuyuanDocTabs({ items, density = "default" }: Props) {
               title={item.label}
               onClick={() => setActive(i)}
               className={
-                selected
-                  ? `ui-btn ui-btn-sm ui-btn-on min-w-0 !justify-start gap-0 px-2.5 text-left ${compact ? "text-[12px]" : "px-3"} ${tabBtnWidth}`
-                  : `ui-btn ui-btn-sm min-w-0 !justify-start gap-0 px-2.5 text-left ${compact ? "text-[12px]" : "px-3"} ${tabBtnWidth}`
+                gradientFrame
+                  ? selected
+                    ? `ui-btn ui-btn-sm min-w-0 w-full !justify-start !border-0 gap-0 bg-[#fdf2f8] px-2.5 text-left font-semibold text-ink !shadow-none hover:!bg-[#fce7f3] ${compact ? "text-[12px]" : "px-3"}`
+                    : `ui-btn ui-btn-sm min-w-0 w-full !justify-start !border-0 gap-0 bg-page px-2.5 text-left text-ink !shadow-none hover:!bg-[#fce7f3] ${compact ? "text-[12px]" : "px-3"}`
+                  : selected
+                    ? `ui-btn ui-btn-sm ui-btn-on min-w-0 !justify-start gap-0 px-2.5 text-left ${compact ? "text-[12px]" : "px-3"} ${tabBtnWidth}`
+                    : `ui-btn ui-btn-sm min-w-0 !justify-start gap-0 px-2.5 text-left ${compact ? "text-[12px]" : "px-3"} ${tabBtnWidth}`
               }
             >
               <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
             </button>
+          );
+          return gradientFrame ? (
+            <GwyGradientRing
+              key={item.id}
+              radius="pill"
+              className={`min-w-0 ${tabBtnWidth}`}
+              innerClassName="flex w-full min-w-0"
+            >
+              {tabBtn}
+            </GwyGradientRing>
+          ) : (
+            <Fragment key={item.id}>{tabBtn}</Fragment>
           );
         })}
       </div>
@@ -73,7 +100,15 @@ export function GongwuyuanDocTabs({ items, density = "default" }: Props) {
         aria-labelledby={`gwy-tab-${doc.id}`}
         className="min-w-0"
       >
-        <RoleCardMarkdown markdown={doc.content} variant="read" />
+        {gradientFrame ? (
+          <GwyGradientRing radius="card" className="w-full min-w-0" innerClassName="min-w-0 bg-page">
+            <div className="min-w-0 p-3 sm:p-4">
+              <RoleCardMarkdown markdown={doc.content} variant="read" />
+            </div>
+          </GwyGradientRing>
+        ) : (
+          <RoleCardMarkdown markdown={doc.content} variant="read" />
+        )}
       </section>
     </div>
   );

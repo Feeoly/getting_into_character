@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   isPresetImageId,
+  isPresetVideoId,
   PRESET_IMAGE_IDS,
   PRESET_IMAGE_LABEL,
   PRESET_VIDEO_IDS,
@@ -132,7 +133,7 @@ export function SettingsDrawer({
       onChange({
         ...settings,
         backgroundSource: source,
-        presetId: vid === "bg-loop" || vid === "bg-loop-2" ? vid : "bg-loop",
+        presetId: isPresetVideoId(vid) ? vid : "bg-loop",
       });
       return;
     }

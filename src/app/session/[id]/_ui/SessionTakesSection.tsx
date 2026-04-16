@@ -5,10 +5,7 @@ import { useEffect, useState } from "react";
 
 import { listTakesForSession } from "../rehearsal/_lib/transcription/transcriptRepo";
 import type { TranscriptionJobRow } from "../rehearsal/_lib/transcription/transcriptionTypes";
-import {
-  retryTranscriptionForTake,
-  startTranscriptionRunner,
-} from "../rehearsal/_lib/transcription/transcriptionRunner";
+import { startTranscriptionRunner } from "../rehearsal/_lib/transcription/transcriptionRunner";
 import { review, stt } from "../rehearsal/_lib/transcription/sttCopy";
 
 function formatWhen(ms: number) {
@@ -102,27 +99,13 @@ export function SessionTakesSection({ sessionId }: Props) {
                   <span className="font-medium">{jobStatusLabel(j.status)}</span>
                 </div>
                 <div className="mt-4 flex flex-row flex-wrap items-center gap-2 pt-3">
-                  {j.status === "failed" ? (
-                    <button
-                      type="button"
-                      className="ui-btn ui-btn-sm ui-btn-equal"
-                      onClick={() =>
-                        void (async () => {
-                          await retryTranscriptionForTake(sessionId, row.takeId);
-                          setTick((x) => x + 1);
-                        })()
-                      }
-                    >
-                      {stt.inlineRetry}
-                    </button>
-                  ) : null}
                   {j.status === "succeeded" ? (
                     <>
                       <Link
                         href={`/session/${sessionId}/transcript/${row.takeId}`}
                         className="ui-btn ui-btn-sm ui-btn-equal"
                       >
-                        查看转写
+                        {stt.enterTranscript}
                       </Link>
                       <Link
                         href={`/session/${sessionId}/review/${row.takeId}`}
@@ -132,9 +115,39 @@ export function SessionTakesSection({ sessionId }: Props) {
                       </Link>
                     </>
                   ) : null}
-                  {(j.status === "queued" || j.status === "processing") && (
-                    <span className="text-xs text-ink-subtle">{stt.summaryLoading}</span>
-                  )}
+                  {(j.status === "queued" || j.status === "processing") ? (
+                    <>
+                      <span className="text-xs text-ink-subtle">{stt.summaryLoading}</span>
+                      <Link
+                        href={`/session/${sessionId}/transcript/${row.takeId}`}
+                        className="ui-btn ui-btn-sm ui-btn-equal"
+                      >
+                        {stt.enterTranscript}
+                      </Link>
+                      <Link
+                        href={`/session/${sessionId}/review/${row.takeId}`}
+                        className="ui-btn ui-btn-sm ui-btn-equal"
+                      >
+                        {review.openReview}
+                      </Link>
+                    </>
+                  ) : null}
+                  {j.status === "failed" ? (
+                    <>
+                      <Link
+                        href={`/session/${sessionId}/transcript/${row.takeId}`}
+                        className="ui-btn ui-btn-sm ui-btn-equal"
+                      >
+                        {stt.enterTranscript}
+                      </Link>
+                      <Link
+                        href={`/session/${sessionId}/review/${row.takeId}`}
+                        className="ui-btn ui-btn-sm ui-btn-equal"
+                      >
+                        {review.openReview}
+                      </Link>
+                    </>
+                  ) : null}
                 </div>
               </div>
             </li>

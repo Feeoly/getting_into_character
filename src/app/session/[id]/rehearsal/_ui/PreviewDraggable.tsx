@@ -11,6 +11,12 @@ type Props = {
 
 type Pos = { x: number; y: number };
 
+/** 展开态小窗；折叠为圆形入口；默认贴近底栏略抬高以免挡录制区 */
+const PIP_W_EXPANDED = 200;
+const PIP_H_EXPANDED = 112;
+const PIP_COLLAPSED = 56;
+const PIP_BOTTOM_INSET = 24;
+
 function clamp(v: number, min: number, max: number) {
   return Math.max(min, Math.min(max, v));
 }
@@ -63,21 +69,17 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     [liveStream],
   );
 
-  // 首帧与折叠切换：默认「左下角」，与右下角会话/录制面板错开；始终钳在 viewport 内
+  // 首帧与折叠切换：默认底部居中；尺寸变化时钳在 viewport 内
   useLayoutEffect(() => {
     if (typeof window === "undefined") return;
-    const pipW = collapsed ? 72 : 280;
-    const pipH = collapsed ? 72 : 168;
-    const { h, ox, oy } = viewportBox();
-    const margin = 8;
+    const pipW = collapsed ? PIP_COLLAPSED : PIP_W_EXPANDED;
+    const pipH = collapsed ? PIP_COLLAPSED : PIP_H_EXPANDED;
+    const { w, h, ox, oy } = viewportBox();
     setPos((p) => {
       if (!p) {
-        return clampPipPos(
-          Math.round(ox + margin),
-          Math.round(oy + h - pipH - 24),
-          pipW,
-          pipH,
-        );
+        const x = Math.round(ox + (w - pipW) / 2);
+        const y = Math.round(oy + h - pipH - PIP_BOTTOM_INSET);
+        return clampPipPos(x, y, pipW, pipH);
       }
       return clampPipPos(p.x, p.y, pipW, pipH);
     });
@@ -111,8 +113,8 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
 
   useEffect(() => {
     if (!pos) return;
-    const pipW = collapsed ? 72 : 280;
-    const pipH = collapsed ? 72 : 168;
+    const pipW = collapsed ? PIP_COLLAPSED : PIP_W_EXPANDED;
+    const pipH = collapsed ? PIP_COLLAPSED : PIP_H_EXPANDED;
     function reclamp() {
       setPos((p) => (p ? clampPipPos(p.x, p.y, pipW, pipH) : p));
     }
@@ -140,8 +142,8 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
     const startY = e.clientY;
     const startPos = pos;
 
-    const pipW = collapsed ? 72 : 280;
-    const pipH = collapsed ? 72 : 168;
+    const pipW = collapsed ? PIP_COLLAPSED : PIP_W_EXPANDED;
+    const pipH = collapsed ? PIP_COLLAPSED : PIP_H_EXPANDED;
 
     const onMove = (ev: PointerEvent) => {
       if (!rootRef.current) return;
@@ -164,7 +166,9 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
 
   if (!pos) return null;
 
-  const size = collapsed ? { w: 72, h: 72 } : { w: 280, h: 168 };
+  const size = collapsed
+    ? { w: PIP_COLLAPSED, h: PIP_COLLAPSED }
+    : { w: PIP_W_EXPANDED, h: PIP_H_EXPANDED };
 
   const pip = (
     <div
@@ -198,6 +202,11 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
               muted
               playsInline
             />
+            {!collapsed ? (
+              <div className="pointer-events-none absolute bottom-1.5 left-1/2 z-[5] -translate-x-1/2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white/90 shadow-sm backdrop-blur-sm">
+                可拖拽
+              </div>
+            ) : null}
             {mode === "live" && liveStream && !hasLiveVideoTrack ? (
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/50 px-2 text-center text-[11px] font-medium text-white/90">
                 未检测到视频轨（仅麦克风）
@@ -205,10 +214,15 @@ export function PreviewDraggable({ liveStream, playbackUrl, mode }: Props) {
             ) : null}
           </>
         ) : (
-          <div className="flex h-full w-full items-center justify-center px-2 text-center text-xs font-semibold text-white/80">
-            {mode === "live"
-              ? "开始录制后显示预览"
-              : "无视频回放"}
+          <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 px-2 text-center">
+            <span className="text-[11px] font-semibold leading-snug text-white/80">
+              {mode === "live" ? "开始录制后显示预览" : "无视频回放"}
+            </span>
+            {!collapsed ? (
+              <span className="pointer-events-none rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white/88 backdrop-blur-sm">
+                可拖拽
+              </span>
+            ) : null}
           </div>
         )}
 

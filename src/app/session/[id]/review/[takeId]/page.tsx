@@ -104,6 +104,8 @@ export default function ReviewPage({
   } | null>(null);
   const [sttPending, setSttPending] = useState(false);
   const [tick, setTick] = useState(0);
+  /** 避免轮询 tick 时反复 create/revoke ObjectURL，导致 video 不断从 0 缓冲 */
+  const mediaJobKeyRef = useRef<string | null>(null);
 
   const takeOk = takeIdSchema.safeParse(takeId).success;
 
@@ -144,6 +146,10 @@ export default function ReviewPage({
   }, [id, takeOk]);
 
   useEffect(() => {
+    mediaJobKeyRef.current = null;
+  }, [id, takeId]);
+
+  useEffect(() => {
     if (!takeOk || notFound) return;
     const t = window.setInterval(() => setTick((x) => x + 1), 2000);
     return () => window.clearInterval(t);
@@ -166,13 +172,18 @@ export default function ReviewPage({
       if (job?.audioBlob && job.audioBlob.size > 0) {
         const mime = job.mimeType.toLowerCase();
         const k = mime.startsWith("video/") ? "video" : "audio";
-        setMediaKind(k);
-        const url = URL.createObjectURL(job.audioBlob);
-        setMediaUrl((prev) => {
-          if (prev) URL.revokeObjectURL(prev);
-          return url;
-        });
+        const mediaKey = `${job.id}:${job.audioBlob.size}`;
+        if (mediaJobKeyRef.current !== mediaKey) {
+          mediaJobKeyRef.current = mediaKey;
+          setMediaKind(k);
+          const url = URL.createObjectURL(job.audioBlob);
+          setMediaUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev);
+            return url;
+          });
+        }
       } else {
+        mediaJobKeyRef.current = null;
         setMediaKind(null);
         setMediaUrl((prev) => {
           if (prev) URL.revokeObjectURL(prev);

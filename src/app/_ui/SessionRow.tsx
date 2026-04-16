@@ -27,7 +27,8 @@ export function SessionRow({
   return (
     <Link
       href={`/session/${session.id}`}
-      className="flex min-h-[6.25rem] min-w-0 flex-col overflow-hidden rounded-[var(--radius-card)] bg-surface px-5 py-5 transition-colors hover:bg-ink/[0.04] sm:min-h-[6.75rem]"
+      prefetch
+      className="flex min-h-[6.25rem] min-w-0 touch-manipulation flex-col overflow-hidden rounded-[var(--radius-card)] bg-surface px-5 py-5 transition-colors hover:bg-ink/[0.04] sm:min-h-[6.75rem]"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 pr-1">

@@ -137,7 +137,7 @@ export function TranscriptSummaryCard({ sessionId }: Props) {
                 href={`/session/${sessionId}/transcript/${takeIdForLink}`}
                 className="ui-btn ui-btn-sm ui-btn-equal inline-flex"
               >
-                {stt.viewFull}
+                {stt.enterTranscript}
               </Link>
               <Link
                 href={`/session/${sessionId}/review/${takeIdForLink}`}
